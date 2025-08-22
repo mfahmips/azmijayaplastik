@@ -10,7 +10,7 @@ class Kasir extends BaseController
     {
         // contoh data awal untuk tampilan
         $data = [
-            'title' => 'Kasir (POS)',
+            'title' => 'Kasir (Point Of Sale)',
             'cart'  => [],   // nanti ganti dari session
             'items' => [],   // nanti ganti dari database (produk)
         ];

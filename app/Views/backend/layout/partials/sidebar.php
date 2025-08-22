@@ -46,18 +46,43 @@ if (!function_exists('is_open')) {
       <!-- ====== Master Data ====== -->
       <li class="sidebar-title">Master Data</li>
 
-      <li class="<?= is_open(['backend/produk*','backend/kategori*','backend/supplier*','backend/pelanggan*']) ?>">
+      <li class="<?= is_open([
+        'dashboard/products*',
+        'dashboard/categories*',
+        'dashboard/suppliers*',
+        'dashboard/customers*'
+      ]) ?>">
         <a href="#">
-          <i class="material-icons-two-tone">inventory_2</i>Produk & Relasi
+          <i class="material-icons-two-tone">inventory_2</i>
+          Produk & Relasi
           <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
         </a>
         <ul class="sub-menu">
-          <li><a class="<?= is_active('backend/produk*') ?>"   href="<?= base_url('backend/produk') ?>">Produk</a></li>
-          <li><a class="<?= is_active('backend/kategori*') ?>" href="<?= base_url('backend/kategori') ?>">Kategori</a></li>
-          <li><a class="<?= is_active('backend/supplier*') ?>" href="<?= base_url('backend/supplier') ?>">Supplier</a></li>
-          <li><a class="<?= is_active('backend/pelanggan*') ?>" href="<?= base_url('backend/pelanggan') ?>">Pelanggan</a></li>
+          <li>
+            <a class="<?= is_active('dashboard/products*') ?>" href="<?= base_url('dashboard/products') ?>">
+              Produk
+            </a>
+          </li>
+          <li>
+            <a class="<?= is_active('dashboard/categories*') ?>" href="<?= base_url('dashboard/categories') ?>">
+              Kategori
+            </a>
+          </li>
+          <li>
+            <a class="<?= is_active('dashboard/suppliers*') ?>" href="<?= base_url('dashboard/suppliers') ?>">
+              Supplier
+            </a>
+          </li>
+          <li>
+            <a class="<?= is_active('dashboard/customers*') ?>" href="<?= base_url('dashboard/customers') ?>">
+              Pelanggan
+            </a>
+          </li>
         </ul>
       </li>
+
+
+
 
       <!-- ====== Stok & Inventori ====== -->
       <li class="sidebar-title">Stok & Inventori</li>
