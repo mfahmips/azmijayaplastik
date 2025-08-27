@@ -12,6 +12,14 @@ $routes->group('dashboard', static function($routes) {
     // Utama
     $routes->get('/', 'Backend\Dashboard::index');
     $routes->get('kasir', 'Backend\Kasir::index');
+    $routes->post('kasir/tambahProdukBaru', 'Backend\Kasir::tambahProdukBaru');
+    $routes->get('kasir/cariProduk', 'Backend\Kasir::cariProduk');
+    $routes->post('kasir/simpanTransaksi', 'Backend\Kasir::simpanTransaksi');
+    $routes->get('penjualan', 'Backend\Kasir::penjualan');
+    $routes->get('penjualan/data', 'Backend\Kasir::penjualanData');
+
+
+
 
     // Produk
     $routes->get('products', 'Backend\Products::index');

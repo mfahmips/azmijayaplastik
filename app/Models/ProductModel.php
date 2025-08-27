@@ -28,8 +28,10 @@ class ProductModel extends Model
     public function getJoined()
     {
         return $this->select('products.*, categories.name AS category_name')
-                    ->join('categories', 'categories.id = products.category_id', 'left');
+                    ->join('categories', 'categories.id = products.category_id', 'left')
+                    ->orderBy('products.id', 'DESC');
     }
+
 
 }
 

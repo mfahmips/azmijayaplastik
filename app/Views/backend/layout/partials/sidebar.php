@@ -109,9 +109,10 @@ if (!function_exists('is_open')) {
           <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
         </a>
         <ul class="sub-menu">
-          <li><a class="<?= is_active('backend/penjualan*') ?>" href="<?= base_url('backend/penjualan') ?>">Penjualan</a></li>
-          <li><a class="<?= is_active('backend/pembelian*') ?>" href="<?= base_url('backend/pembelian') ?>">Pembelian</a></li>
+          <li><a class="<?= is_active('dashboard/penjualan*') ?>" href="<?= base_url('dashboard/penjualan') ?>">Penjualan</a></li>
+          <li><a class="<?= is_active('dashboard/pembelian*') ?>" href="<?= base_url('dashboard/pembelian') ?>">Pembelian</a></li>
         </ul>
+
       </li>
 
       <!-- ====== Laporan ====== -->
