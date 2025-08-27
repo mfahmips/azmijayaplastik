@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Waktu pembuatan: 27 Agu 2025 pada 15.50
+-- Waktu pembuatan: 27 Agu 2025 pada 17.58
 -- Versi server: 8.0.30
 -- Versi PHP: 8.1.10
 
@@ -123,9 +123,9 @@ CREATE TABLE `customers` (
 
 CREATE TABLE `products` (
   `id` bigint UNSIGNED NOT NULL,
-  `sku` varchar(50) NOT NULL,
+  `sku` varchar(50) DEFAULT NULL,
   `name` varchar(150) NOT NULL,
-  `category_id` bigint UNSIGNED NOT NULL,
+  `category_id` bigint UNSIGNED DEFAULT NULL,
   `supplier_id` bigint UNSIGNED DEFAULT NULL,
   `barcode` varchar(100) DEFAULT NULL,
   `unit` varchar(20) DEFAULT 'pcs',
@@ -139,6 +139,66 @@ CREATE TABLE `products` (
   `updated_at` datetime DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data untuk tabel `products`
+--
+
+INSERT INTO `products` (`id`, `sku`, `name`, `category_id`, `supplier_id`, `barcode`, `unit`, `cost_price`, `sell_price`, `stock`, `min_stock`, `is_active`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'SKU-20250827-162536', 'PE 6 X 10', NULL, NULL, NULL, 'pcs', 0.00, 0.00, 0, 0, 1, NULL, '2025-08-27 16:25:36', '2025-08-27 16:25:36', NULL),
+(3, 'SKU-20250827-165946', 'Cup 16 OZ', NULL, NULL, NULL, 'pcs', 0.00, 10000.00, -18, 0, 1, NULL, '2025-08-27 16:59:46', '2025-08-27 17:44:26', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `sales`
+--
+
+CREATE TABLE `sales` (
+  `id` bigint UNSIGNED NOT NULL,
+  `invoice` varchar(50) NOT NULL,
+  `customer_id` bigint UNSIGNED DEFAULT NULL,
+  `total_price` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `total_items` int NOT NULL DEFAULT '0',
+  `paid` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `change` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data untuk tabel `sales`
+--
+
+INSERT INTO `sales` (`id`, `invoice`, `customer_id`, `total_price`, `total_items`, `paid`, `change`, `created_at`) VALUES
+(1, 'INV-1756316340', NULL, 30000.00, 1, 0.00, 0.00, '2025-08-27 17:39:00'),
+(2, 'INV-1756316378', NULL, 70000.00, 1, 0.00, 30000.00, '2025-08-27 17:39:38'),
+(3, 'INV-1756316507', NULL, 30000.00, 1, 50000.00, 20000.00, '2025-08-27 17:41:47'),
+(4, 'INV-20250827-0004', NULL, 50000.00, 1, 100000.00, 50000.00, '2025-08-27 17:44:26');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `sale_items`
+--
+
+CREATE TABLE `sale_items` (
+  `id` bigint UNSIGNED NOT NULL,
+  `sale_id` bigint UNSIGNED NOT NULL,
+  `product_id` bigint UNSIGNED NOT NULL,
+  `price` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `qty` int NOT NULL DEFAULT '0',
+  `subtotal` decimal(12,2) NOT NULL DEFAULT '0.00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data untuk tabel `sale_items`
+--
+
+INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `price`, `qty`, `subtotal`) VALUES
+(3, 1, 3, 10000.00, 3, 30000.00),
+(4, 2, 3, 10000.00, 7, 70000.00),
+(5, 3, 3, 10000.00, 3, 30000.00),
+(6, 4, 3, 10000.00, 5, 50000.00);
 
 -- --------------------------------------------------------
 
@@ -188,6 +248,20 @@ ALTER TABLE `products`
   ADD KEY `supplier_id` (`supplier_id`);
 
 --
+-- Indeks untuk tabel `sales`
+--
+ALTER TABLE `sales`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `sale_items`
+--
+ALTER TABLE `sale_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sale_id` (`sale_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
 -- Indeks untuk tabel `suppliers`
 --
 ALTER TABLE `suppliers`
@@ -214,7 +288,19 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT untuk tabel `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT untuk tabel `sales`
+--
+ALTER TABLE `sales`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT untuk tabel `sale_items`
+--
+ALTER TABLE `sale_items`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT untuk tabel `suppliers`
@@ -230,8 +316,15 @@ ALTER TABLE `suppliers`
 -- Ketidakleluasaan untuk tabel `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`),
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `sale_items`
+--
+ALTER TABLE `sale_items`
+  ADD CONSTRAINT `sale_items_ibfk_1` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `sale_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
