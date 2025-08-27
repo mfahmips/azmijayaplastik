@@ -3,158 +3,104 @@
 namespace App\Controllers\Backend;
 
 use App\Controllers\BaseController;
-use App\Models\SuppliersModel;
+use App\Models\SupplierModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Suppliers extends BaseController
 {
-    protected SuppliersModel $supplier;
+    protected $supplier;
 
     public function __construct()
     {
-        $this->supplier = new SuppliersModel();
+        $this->supplier = new SupplierModel();
     }
 
     public function index()
     {
-        $q = $this->request->getGet('q');
-
-        $builder = $this->supplier->orderBy('name', 'ASC');
-
-        if ($q) {
-            $builder->groupStart()
-                ->like('name', $q)
-                ->orLike('email', $q)
-                ->orLike('phone', $q)
-                ->groupEnd();
-        }
-
-        $rows = $builder->paginate(10);
-        $pager = $this->supplier->pager;
-
-        return view('backend/master/suppliers/index', compact('rows', 'pager', 'q'));
+        $data = [
+            'suppliers' => $this->supplier->findAll(),
+            'title'     => 'Data Supplier'
+        ];
+        return view('backend/master/suppliers/index', $data);
     }
 
-    public function form($id = null)
+    public function create()
     {
-        $row = $id ? $this->supplier->find($id) : null;
-        return view('backend/master/suppliers/form', compact('row'));
+        return view('backend/master/suppliers/create');
     }
 
-    public function save($id = null)
+    public function store()
+    {
+        $this->supplier->save($this->request->getPost());
+        return redirect()->to(base_url('backend/suppliers'))->with('success', 'Data berhasil ditambahkan.');
+    }
+
+    public function edit($id)
     {
         $data = [
-            'name'    => trim($this->request->getPost('name')),
-            'email'   => $this->request->getPost('email') ?: null,
-            'phone'   => $this->request->getPost('phone') ?: null,
-            'address' => $this->request->getPost('address') ?: null,
-            'note'    => $this->request->getPost('note') ?: null,
+            'supplier' => $this->supplier->find($id)
         ];
+        return view('backend/master/suppliers/edit', $data);
+    }
 
-        if ($id) {
-            $this->supplier->update($id, $data);
-        } else {
-            $this->supplier->insert($data);
-        }
-
-        return redirect()->to('/dashboard/suppliers')->with('msg', 'Supplier tersimpan');
+    public function update($id)
+    {
+        $this->supplier->update($id, $this->request->getPost());
+        return redirect()->to(base_url('backend/suppliers'))->with('success', 'Data berhasil diupdate.');
     }
 
     public function delete($id)
     {
-        $this->supplier->delete($id, true);
-        return redirect()->back()->with('msg', 'Supplier dihapus');
+        $this->supplier->delete($id);
+        return redirect()->to(base_url('backend/suppliers'))->with('success', 'Data berhasil dihapus.');
     }
 
-    public function export($format = 'xlsx')
+    public function export()
     {
-        $rows = $this->supplier->orderBy('name', 'ASC')->findAll();
+        $data = $this->supplier->findAll();
+        $sheet = new Spreadsheet();
+        $s = $sheet->getActiveSheet();
 
-        $s = new Spreadsheet();
-        $ws = $s->getActiveSheet();
+        $s->fromArray(['Kode', 'Nama', 'Kontak', 'Telepon', 'Email', 'Alamat'], null, 'A1');
 
-        $ws->fromArray([
-            'id', 'name', 'email', 'phone', 'address', 'note', 'created_at', 'updated_at'
-        ], null, 'A1');
-
-        $r = 2;
-        foreach ($rows as $x) {
-            $ws->fromArray([
-                $x['id'], $x['name'], $x['email'], $x['phone'],
-                $x['address'], $x['note'], $x['created_at'] ?? '', $x['updated_at'] ?? ''
-            ], null, "A{$r}");
-            $r++;
+        $row = 2;
+        foreach ($data as $d) {
+            $s->fromArray([
+                $d['code'], $d['name'], $d['contact_person'],
+                $d['phone'], $d['email'], $d['address']
+            ], null, 'A' . $row++);
         }
 
-        return $this->download($s, 'suppliers_' . date('Ymd_His'), $format);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=\"Suppliers_" . date('Ymd_His') . ".xlsx\"");
+        header('Cache-Control: max-age=0');
+        (new Xlsx($sheet))->save('php://output');
+        exit;
     }
 
     public function import()
     {
-        $file = $this->request->getFile('file');
+        $file = $this->request->getFile('file_excel');
+        if ($file && $file->isValid()) {
+            $sheet = IOFactory::load($file->getTempName())->getActiveSheet()->toArray();
 
-        if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('errors', ['file' => 'File tidak valid']);
-        }
-
-        $reader = IOFactory::createReader(strtolower($file->getExtension()) === 'csv' ? 'Csv' : 'Xlsx');
-        if ($reader instanceof \PhpOffice\PhpSpreadsheet\Reader\Csv) {
-            $reader->setDelimiter(',');
-        }
-
-        $rows = $reader->load($file->getTempName())->getActiveSheet()->toArray(null, true, true, true);
-
-        $imported = 0;
-        $updated = 0;
-
-        foreach ($rows as $i => $c) {
-            if ($i === 1) continue;
-
-            $name = trim((string)($c['B'] ?? ''));
-            if ($name === '') continue;
-
-            $data = [
-                'name'    => $name,
-                'email'   => trim((string)($c['C'] ?? '')) ?: null,
-                'phone'   => trim((string)($c['D'] ?? '')) ?: null,
-                'address' => trim((string)($c['E'] ?? '')) ?: null,
-                'note'    => trim((string)($c['F'] ?? '')) ?: null,
-            ];
-
-            $id = (int)($c['A'] ?? 0);
-            if ($id && $this->supplier->find($id)) {
-                $this->supplier->update($id, $data);
-                $updated++;
-            } else {
-                $this->supplier->insert($data);
-                $imported++;
+            for ($i = 1; $i < count($sheet); $i++) {
+                $row = $sheet[$i];
+                $this->supplier->save([
+                    'code'           => $row[0],
+                    'name'           => $row[1],
+                    'contact_person' => $row[2],
+                    'phone'          => $row[3],
+                    'email'          => $row[4],
+                    'address'        => $row[5]
+                ]);
             }
+
+            return redirect()->to(base_url('backend/suppliers'))->with('success', 'Import berhasil!');
         }
 
-        return redirect()->back()->with('msg', "Import selesai. Tambah: {$imported}, Update: {$updated}");
-    }
-
-    private function download(Spreadsheet $s, string $name, string $format)
-    {
-        $format = strtolower($format);
-        if ($format === 'csv') {
-            $w = new Csv($s);
-            $mime = 'text/csv';
-            $ext = 'csv';
-        } else {
-            $w = new Xlsx($s);
-            $mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            $ext = 'xlsx';
-        }
-
-        $tmp = tempnam(sys_get_temp_dir(), 'exp_');
-        $w->save($tmp);
-
-        return $this->response
-            ->download("{$name}.{$ext}", file_get_contents($tmp), true)
-            ->setContentType($mime);
+        return redirect()->back()->with('error', 'File tidak valid.');
     }
 }

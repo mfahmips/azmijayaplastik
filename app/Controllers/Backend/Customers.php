@@ -1,158 +1,119 @@
 <?php
+
 namespace App\Controllers\Backend;
 
 use App\Controllers\BaseController;
-use App\Models\CustomersModel;
+use App\Models\CustomerModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Customers extends BaseController
 {
-    protected CustomersModel $customer;
+    protected $customer;
+
     public function __construct()
     {
-        $this->customer = new CustomersModel();
+        $this->customer = new CustomerModel();
     }
 
     public function index()
     {
-        $q = $this->request->getGet('q');
-        $builder = $this->customer->orderBy('name', 'ASC');
-
-        if ($q) {
-            $builder->groupStart()
-                ->like('name', $q)
-                ->orLike('email', $q)
-                ->orLike('phone', $q)
-                ->groupEnd();
-        }
-
-        // Gunakan paginate agar $pager tersedia
-        $rows = $builder->paginate(10);
-        $pager = $this->customer->pager;
-
-        return view('backend/master/customers/index', compact('rows', 'pager', 'q'));
+        $data = [
+            'title' => 'Data Pelanggan',
+            'customers' => $this->customer->findAll()
+        ];
+        return view('backend/master/customers/index', $data);
     }
 
-    public function form($id = null)
+    public function create()
     {
-        $row = $id ? $this->customer->find($id) : null;
-        return view('backend/master/customers/form', compact('row'));
+        return view('backend/master/customers/create');
     }
 
-    public function save($id = null)
+    public function store()
+    {
+        $this->customer->save($this->request->getPost());
+        return redirect()->to(base_url('backend/customers'))->with('success', 'Data berhasil ditambahkan.');
+    }
+
+    public function edit($id)
     {
         $data = [
-            'name'    => trim($this->request->getPost('name')),
-            'email'   => $this->request->getPost('email') ?: null,
-            'phone'   => $this->request->getPost('phone') ?: null,
-            'address' => $this->request->getPost('address') ?: null,
-            'note'    => $this->request->getPost('note') ?: null,
+            'customer' => $this->customer->find($id)
         ];
+        return view('backend/master/customers/edit', $data);
+    }
 
-        if ($id) {
-            $this->customer->update($id, $data);
-        } else {
-            $this->customer->insert($data);
-        }
-
-        return redirect()->to('/backend/customers')->with('msg', 'Pelanggan tersimpan');
+    public function update($id)
+    {
+        $this->customer->update($id, $this->request->getPost());
+        return redirect()->to(base_url('backend/customers'))->with('success', 'Data berhasil diupdate.');
     }
 
     public function delete($id)
     {
-        $this->customer->delete($id, true);
-        return redirect()->back()->with('msg', 'Pelanggan dihapus');
+        $this->customer->delete($id);
+        return redirect()->to(base_url('backend/customers'))->with('success', 'Data berhasil dihapus.');
     }
 
-    public function export($format = 'xlsx')
+    public function export()
     {
-        $rows = $this->customer->orderBy('name', 'ASC')->findAll();
-        $s = new Spreadsheet();
-        $ws = $s->getActiveSheet();
+        $customers = $this->customer->findAll();
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        $ws->fromArray(['id', 'name', 'email', 'phone', 'address', 'note', 'created_at', 'updated_at'], null, 'A1');
+        // Header
+        $sheet->setCellValue('A1', 'Kode');
+        $sheet->setCellValue('B1', 'Nama');
+        $sheet->setCellValue('C1', 'Telepon');
+        $sheet->setCellValue('D1', 'Email');
+        $sheet->setCellValue('E1', 'Alamat');
 
-        $r = 2;
-        foreach ($rows as $x) {
-            $ws->fromArray([
-                $x['id'],
-                $x['name'],
-                $x['email'],
-                $x['phone'],
-                $x['address'],
-                $x['note'],
-                $x['created_at'] ?? '',
-                $x['updated_at'] ?? ''
-            ], null, "A{$r}");
-            $r++;
+        // Data
+        $row = 2;
+        foreach ($customers as $c) {
+            $sheet->setCellValue('A' . $row, $c['code']);
+            $sheet->setCellValue('B' . $row, $c['name']);
+            $sheet->setCellValue('C' . $row, $c['phone']);
+            $sheet->setCellValue('D' . $row, $c['email']);
+            $sheet->setCellValue('E' . $row, $c['address']);
+            $row++;
         }
 
-        return $this->download($s, 'customers_' . date('Ymd_His'), $format);
+        // Output
+        $filename = 'DataPelanggan_' . date('Ymd_His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=\"$filename\"");
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     public function import()
     {
-        $file = $this->request->getFile('file');
-        if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('errors', ['file' => 'File tidak valid']);
-        }
+        $file = $this->request->getFile('file_excel');
+        if ($file && $file->isValid()) {
+            $spreadsheet = IOFactory::load($file->getTempName());
+            $sheetData = $spreadsheet->getActiveSheet()->toArray();
 
-        $reader = IOFactory::createReader(strtolower($file->getExtension()) === 'csv' ? 'Csv' : 'Xlsx');
-        if ($reader instanceof \PhpOffice\PhpSpreadsheet\Reader\Csv) {
-            $reader->setDelimiter(',');
-        }
-
-        $rows = $reader->load($file->getTempName())->getActiveSheet()->toArray(null, true, true, true);
-
-        $imported = 0;
-        $updated = 0;
-
-        foreach ($rows as $i => $c) {
-            if ($i === 1) continue; // Skip header
-            $name = trim((string)($c['B'] ?? ''));
-            if ($name === '') continue;
-
-            $data = [
-                'name'    => $name,
-                'email'   => trim((string)($c['C'] ?? '')) ?: null,
-                'phone'   => trim((string)($c['D'] ?? '')) ?: null,
-                'address' => trim((string)($c['E'] ?? '')) ?: null,
-                'note'    => trim((string)($c['F'] ?? '')) ?: null
-            ];
-
-            $id = (int)($c['A'] ?? 0);
-            if ($id && $this->customer->find($id)) {
-                $this->customer->update($id, $data);
-                $updated++;
-            } else {
-                $this->customer->insert($data);
-                $imported++;
+            // Skip header (baris ke-0)
+            for ($i = 1; $i < count($sheetData); $i++) {
+                $row = $sheetData[$i];
+                $this->customer->save([
+                    'code'   => $row[0],
+                    'name'   => $row[1],
+                    'phone'  => $row[2],
+                    'email'  => $row[3],
+                    'address'=> $row[4]
+                ]);
             }
-        }
 
-        return redirect()->back()->with('msg', "Import selesai. Tambah: {$imported}, Update: {$updated}");
-    }
-
-    private function download(Spreadsheet $s, string $name, string $format)
-    {
-        $format = strtolower($format);
-
-        if ($format === 'csv') {
-            $writer = new Csv($s);
-            $mime = 'text/csv';
-            $ext = 'csv';
+            return redirect()->to(base_url('backend/customers'))->with('success', 'Import berhasil!');
         } else {
-            $writer = new Xlsx($s);
-            $mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            $ext = 'xlsx';
+            return redirect()->back()->with('error', 'Gagal mengunggah file.');
         }
-
-        $tmp = tempnam(sys_get_temp_dir(), 'exp_');
-        $writer->save($tmp);
-
-        return $this->response->download("{$name}.{$ext}", file_get_contents($tmp), true)->setContentType($mime);
     }
 }

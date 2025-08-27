@@ -1,218 +1,184 @@
 <?php
+
 namespace App\Controllers\Backend;
 
 use App\Controllers\BaseController;
-use App\Models\CategoriesModel;
+use App\Models\CategoryModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Categories extends BaseController
 {
-    protected CategoriesModel $category;
+    protected $category;
 
     public function __construct()
     {
-        $this->category = new CategoriesModel();
+        $this->category = new CategoryModel();
     }
 
     public function index()
     {
-        helper('pagination');
-
-        $q       = trim((string) $this->request->getGet('q'));
-        $perPage = (int) ($this->request->getGet('per_page') ?: 15);
-        $group   = 'categories';
-
-        $model = $this->category->orderBy('parent_id ASC, name ASC');
+        $q        = trim($this->request->getGet('q') ?? '');
+        $perPage  = 8;
+        $builder  = $this->category->orderBy('id', 'ASC');
 
         if ($q !== '') {
-            $model->groupStart()
-                  ->like('name', $q)
-                  ->orLike('slug', $q)
-                  ->groupEnd();
+            $builder = $builder->groupStart()
+                ->like('name', $q)
+                ->orLike('code', $q)
+                ->orLike('description', $q)
+            ->groupEnd();
         }
 
-        $rows  = $model->paginate($perPage, $group);
-        $pager = $model->pager;
+        $categories = $builder->paginate($perPage, 'cat');
+        $pager      = $this->category->pager;
+        $no         = 1 + ($pager->getCurrentPage('cat') - 1) * $perPage;
 
-        $parents = (new CategoriesModel())
-                        ->where('parent_id', null)
-                        ->orderBy('name')
-                        ->findAll();
+        if ($this->request->isAJAX()) {
+            return view('backend/master/categories/index', [
+                'categories' => $categories,
+                'pager'      => $pager,
+                'q'          => $q,
+                'per_page'   => $perPage,
+                'no'         => $no,
+                'isAjax'     => true, // <- penting
+            ]);
+        }
+
 
         return view('backend/master/categories/index', [
-            'title'   => 'Kategori',
-            'q'       => $q,
-            'rows'    => $rows,
-            'pager'   => $pager,
-            'parents' => $parents,
-            'group'   => $group,
+            'categories' => $categories,
+            'pager'      => $pager,
+            'no'         => $no,
+            'q'          => $q,
+            'isAjax'     => false // full view
         ]);
     }
 
-    public function save($id = null)
-    {
-        $data = [
-            'parent_id'   => $this->request->getPost('parent_id') ?: null,
-            'name'        => trim($this->request->getPost('name')),
-            'slug'        => trim($this->request->getPost('slug')) ?: url_title($this->request->getPost('name'), '-', true),
-            'description' => $this->request->getPost('description') ?: null,
-        ];
 
-        if ($id) {
-            $this->category->update($id, $data);
-        } else {
-            $this->category->insert($data);
+
+   public function create()
+    {
+        $data = $this->request->getPost([
+            'name',
+            'code',
+            'description',
+            'is_active'
+        ]);
+
+        if (empty($data)) {
+            return redirect()->back()->with('error', 'Form kosong.');
         }
 
-        return redirect()->to('/dashboard/categories')->with('msg', 'Kategori tersimpan');
+        $model = new \App\Models\CategoryModel();
+        if ($model->insert($data)) {
+            return redirect()->to('/dashboard/categories')->with('success', 'Kategori berhasil ditambahkan.');
+        }
+
+        return redirect()->back()->with('error', 'Gagal menyimpan data.');
+    }
+
+
+    public function store()
+    {
+        $data = $this->request->getPost();
+
+        // Auto-generate kode jika tidak diisi
+        if (empty($data['code']) && !empty($data['name'])) {
+            $data['code'] = url_title($data['name'], '-', true);
+        }
+
+        // Pastikan field yang diizinkan
+        $allowedFields = ['name', 'code', 'parent_id', 'description', 'is_active'];
+        $insertData = array_intersect_key($data, array_flip($allowedFields));
+
+        if (empty($insertData)) {
+            return redirect()->back()->withInput()->with('error', 'Data tidak valid.');
+        }
+
+        $this->category->save($insertData);
+
+        return redirect()->to(base_url('dashboard/categories'))->with('success', 'Kategori berhasil ditambahkan.');
+    }
+
+    public function edit($id)
+    {
+        $data = [
+            'category' => $this->category->find($id)
+        ];
+        return view('backend/master/categories/edit', $data);
+    }
+
+    public function update($id)
+    {
+        $data = $this->request->getPost();
+
+        if (empty($data['code']) && !empty($data['name'])) {
+            $data['code'] = url_title($data['name'], '-', true);
+        }
+
+        $allowedFields = ['name', 'code', 'parent_id', 'description', 'is_active'];
+        $updateData = array_intersect_key($data, array_flip($allowedFields));
+
+        if (empty($updateData)) {
+            return redirect()->back()->withInput()->with('error', 'Tidak ada data untuk disimpan.');
+        }
+
+        $this->category->update($id, $updateData);
+
+        return redirect()->to(base_url('dashboard/categories'))->with('success', 'Kategori berhasil diupdate.');
     }
 
     public function delete($id)
     {
-        $mCat  = $this->category;
-        $mProd = new \App\Models\ProductsModel();
-
-        $childCount = $mCat->where('parent_id', $id)->countAllResults();
-        $prodCount  = $mProd->where('category_id', $id)->countAllResults();
-
-        if ($childCount > 0 || $prodCount > 0) {
-            return redirect()->back()->with('errors', [
-                'delete' => "Kategori tidak bisa dihapus. Ada {$childCount} subkategori dan {$prodCount} produk yang masih terkait."
-            ]);
+        if (!$id || !$this->category->find($id)) {
+            return redirect()->back()->with('error', 'Data tidak valid.');
         }
 
-        try {
-            $mCat->delete($id, true);
-            return redirect()->back()->with('msg', 'Kategori dihapus');
-        } catch (\Throwable $e) {
-            return redirect()->back()->with('errors', ['delete' => 'Gagal hapus kategori: '.$e->getMessage()]);
-        }
+        $this->category->delete($id, true);
+        return redirect()->to(base_url('dashboard/categories'))->with('success', 'Kategori berhasil dihapus.');
     }
 
-    public function export($format = 'xlsx')
+
+    public function export()
     {
-        $rows = $this->category->orderBy('parent_id ASC, name ASC')->findAll();
-        $s  = new Spreadsheet();
-        $ws = $s->getActiveSheet();
-        $ws->fromArray(['id','parent_id','name','slug','description','created_at','updated_at'], null, 'A1');
-        $r = 2;
-        foreach ($rows as $x) {
-            $ws->fromArray([
-                $x['id'], $x['parent_id'], $x['name'], $x['slug'],
-                $x['description'], $x['created_at'] ?? '', $x['updated_at'] ?? ''
-            ], null, "A{$r}");
-            $r++;
+        $categories = $this->category->findAll();
+        $sheet = new Spreadsheet();
+        $s = $sheet->getActiveSheet();
+
+        $s->fromArray(['Kode', 'Nama', 'Deskripsi'], null, 'A1');
+        $row = 2;
+
+        foreach ($categories as $c) {
+            $s->fromArray([$c['code'], $c['name'], $c['description']], null, 'A' . $row++);
         }
-        return $this->download($s, 'categories_'.date('Ymd_His'), $format);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=\"Categories_" . date('Ymd_His') . ".xlsx\"");
+        header('Cache-Control: max-age=0');
+        (new Xlsx($sheet))->save('php://output');
+        exit;
     }
 
     public function import()
     {
-        $file = $this->request->getFile('file');
-        if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('errors', ['file' => 'File tidak valid']);
-        }
+        $file = $this->request->getFile('file_excel');
+        if ($file && $file->isValid()) {
+            $sheet = IOFactory::load($file->getTempName())->getActiveSheet()->toArray();
 
-        $ext    = strtolower($file->getExtension());
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($ext === 'csv' ? 'Csv' : 'Xlsx');
-        if ($reader instanceof \PhpOffice\PhpSpreadsheet\Reader\Csv) {
-            $reader->setDelimiter(',')->setEnclosure('"')->setSheetIndex(0);
-        }
-
-        $ws   = $reader->load($file->getTempName())->getActiveSheet();
-        $rows = $ws->toArray(null, true, true, true);
-
-        $db = \Config\Database::connect();
-        $db->transStart();
-        $db->query('SET FOREIGN_KEY_CHECKS=0');
-
-        $model = new CategoriesModel();
-        $model->protect(false);
-
-        $data = [];
-        foreach ($rows as $i => $c) {
-            if ($i === 1) continue;
-            $name = trim((string)($c['C'] ?? ''));
-            if ($name === '') continue;
-
-            $data[] = [
-                'id'          => ($c['A'] === '' ? null : (int)$c['A']),
-                'parent_id'   => ($c['B'] === '' ? null : (int)$c['B']),
-                'name'        => $name,
-                'slug'        => trim((string)($c['D'] ?? '')) ?: url_title($name, '-', true),
-                'description' => trim((string)($c['E'] ?? '')) ?: null,
-            ];
-        }
-
-        $roots    = array_filter($data, fn($r) => empty($r['parent_id']));
-        $children = array_filter($data, fn($r) => !empty($r['parent_id']));
-        $existingIds = array_column($model->select('id')->findAll(), 'id');
-        $insertedIds = [];
-
-        foreach ($roots as $r) {
-            if (!empty($r['id']) && $model->find($r['id'])) {
-                $model->update($r['id'], $r);
-                $insertedIds[$r['id']] = true;
-            } else {
-                $newId = $model->insert($r, true);
-                $insertedIds[$newId] = true;
+            for ($i = 1; $i < count($sheet); $i++) {
+                $row = $sheet[$i];
+                $this->category->save([
+                    'code'        => $row[0],
+                    'name'        => $row[1],
+                    'description' => $row[2]
+                ]);
             }
+
+            return redirect()->to(base_url('dashboard/categories'))->with('success', 'Import berhasil!');
         }
 
-        $pending = array_values($children);
-        $guard = 0;
-
-        while (!empty($pending) && $guard < 10) {
-            $next = [];
-            foreach ($pending as $r) {
-                $pid = (int)$r['parent_id'];
-                if ($pid && (in_array($pid, $existingIds, true) || isset($insertedIds[$pid]))) {
-                    if (!empty($r['id']) && $model->find($r['id'])) {
-                        $model->update($r['id'], $r);
-                        $insertedIds[$r['id']] = true;
-                    } else {
-                        $newId = $model->insert($r, true);
-                        $insertedIds[$newId] = true;
-                    }
-                } else {
-                    $next[] = $r;
-                }
-            }
-            if (count($next) === count($pending)) {
-                foreach ($next as &$r) { $r['parent_id'] = null; }
-            }
-            $pending = $next;
-            $guard++;
-        }
-
-        $db->query('SET FOREIGN_KEY_CHECKS=1');
-        $db->transComplete();
-
-        if ($db->transStatus() === false) {
-            return redirect()->back()->with('errors', ['import' => 'Import gagal: '.$db->error()['message'] ?? 'unknown']);
-        }
-
-        return redirect()->back()->with('msg', 'Import kategori selesai.');
-    }
-
-    private function download(Spreadsheet $s, string $name, string $format)
-    {
-        $format = strtolower($format);
-        if ($format === 'csv') {
-            $writer = new Csv($s);
-            $mime   = 'text/csv';
-            $ext    = 'csv';
-        } else {
-            $writer = new Xlsx($s);
-            $mime   = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            $ext    = 'xlsx';
-        }
-
-        $tmp = tempnam(sys_get_temp_dir(), 'exp_');
-        $writer->save($tmp);
-
-        return $this->response->download("{$name}.{$ext}", file_get_contents($tmp), true)->setContentType($mime);
+        return redirect()->back()->with('error', 'File tidak valid.');
     }
 }

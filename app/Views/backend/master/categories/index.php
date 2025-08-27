@@ -1,182 +1,240 @@
+<?php if (!($isAjax ?? false)): ?>
 <?= $this->extend('backend/layout/default') ?>
 <?= $this->section('content') ?>
-<div class="app-content"><div class="content-wrapper"><div class="container-fluid">
+<?php endif ?>
 
-  <div class="row"><div class="col">
-    <div class="page-description d-flex flex-wrap gap-2 align-items-center justify-content-between">
-      <h1 class="mb-0">Kategori</h1>
-      <div class="d-flex flex-wrap gap-2">
-        <div class="btn-group">
-          <a href="<?= base_url('dashboard/categories/export') ?>" class="btn btn-success btn-sm">Export</a>
-          <button type="button" class="btn btn-warning btn-sm text-dark" data-bs-toggle="modal" data-bs-target="#importModal">Import</button>
-        </div>
-        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#categoryModal" data-mode="create">+ Tambah</button>
-      </div>
-    </div>
-  </div></div>
+<div class="app-content">
+  <div class="content-wrapper">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <div class="page-description">
+                <h4>Data Kategori</h4>
+              </div>
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <form class="input-group" method="get" style="max-width: 300px">
+                  <input name="q" value="<?= esc($q ?? '') ?>" class="form-control" placeholder="Cari Kategori">
+                  <button class="btn btn-light">Search</button>
+                </form>
+                <div class="d-flex flex-wrap gap-2">
+                  <div class="btn-group">
+                    <a href="<?= base_url('dashboard/categories/export') ?>" class="btn btn-success">Export</a>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">Import</button>
+                  </div>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" data-mode="create">+ Tambah</button>
+                </div>
+              </div>
+            </div>
 
-  <div class="row"><div class="col-md-12"><div class="card">
-    <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-      <h5 class="card-title mb-0">Daftar Kategori</h5>
-      <form class="d-flex gap-2" method="get">
-        <input name="q" value="<?= esc($q ?? '') ?>" class="form-control form-control-sm" placeholder="Cari nama/slug" style="width:240px">
-        <button class="btn btn-outline-secondary btn-sm">Cari</button>
-      </form>
-    </div>
+            <div class="card-body">
+              <?= view('backend/layout/partials/_flash') ?>
 
-    <div class="card-body">
-      <?= view('backend/layout/partials/_flash') ?>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0">
-          <thead>
-            <tr>
-              <th style="width:60px">#</th>
-              <th>Kategori</th>
-              <th>Sub Kategori</th>
-              <th class="text-end" style="width:180px">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php 
-              $no = 1 + (max(1, (int)($_GET['page'] ?? 1)) - 1) * 15;
-              $categoriesMap = [];
-              foreach (($rows ?? []) as $r) {
-                $categoriesMap[$r['id']] = $r['name'];
-              }
+              <div id="category-wrapper">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>Kode</th>
+                        <th>Kategori</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach (($categories ?? []) as $r): ?>
+                        <tr>
+                          <td><?= esc($r['code']) ?></td>
+                          <td><?= esc($r['name']) ?></td>
+                          <td><?= $r['is_active'] ? 'Aktif' : 'Nonaktif' ?></td>
+                          <td>
+                            <button class="btn btn-sm btn-primary"
+                              data-bs-toggle="modal" data-bs-target="#categoryModal"
+                              data-mode="edit"
+                              data-id="<?= $r['id'] ?>"
+                              data-name="<?= esc($r['name']) ?>"
+                              data-code="<?= esc($r['code']) ?>"
+                              data-description="<?= esc($r['description']) ?>"
+                              data-is_active="<?= (int)$r['is_active'] ?>"
+                              data-parent_id="<?= esc($r['parent_id'] ?? '') ?>"
+                            >Edit</button>
 
-              foreach (($rows ?? []) as $r): 
-            ?>
-            <tr>
-              <td><?= $no++ ?></td>
-              <td><?= esc($r['name']) ?></td>
-              <td>
-                <?php 
-                  echo isset($categoriesMap[$r['parent_id']]) 
-                    ? esc($categoriesMap[$r['parent_id']]) 
-                    : '<span class="text-muted">-</span>'; 
-                ?>
-              </td>
-              <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary"
-                        data-bs-toggle="modal" data-bs-target="#categoryModal"
-                        data-mode="edit"
-                        data-id="<?= $r['id'] ?>"
-                        data-name="<?= esc($r['name']) ?>"
-                        data-slug="<?= esc($r['slug']) ?>"
-                        data-parent_id="<?= esc($r['parent_id']) ?>">Edit</button>
-                <button class="btn btn-sm btn-outline-danger"
-                        data-bs-toggle="modal" data-bs-target="#confirmDelete"
-                        data-id="<?= $r['id'] ?>">Hapus</button>
-              </td>
-            </tr>
-            <?php endforeach; if (empty($rows)): ?>
-              <tr><td colspan="4" class="text-center text-muted py-4">Belum ada data</td></tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+                            <button class="btn btn-sm btn-danger"
+                              data-bs-toggle="modal"
+                              data-bs-target="#confirmDelete"
+                              data-url="<?= base_url('dashboard/categories/' . $r['id'] . '/delete') ?>">
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
 
-      </div>
-      <div class="mt-3">
-        <?php if (isset($pager) && $pager instanceof \CodeIgniter\Pager\Pager): ?>
-          <?= backend_pagination($pager, $group ?? 'default', 'sm', 'end') ?>
-        <?php endif; ?>
+                      <?php if (empty($categories)): ?>
+                        <tr><td colspan="4" class="text-center text-muted py-4">Belum ada data</td></tr>
+                      <?php endif; ?>
+                    </tbody>
+                  </table>
+                </div>
 
-      </div>
-    </div>
-  </div></div></div>
+                <!-- PAGINATION -->
+                <div class="d-flex justify-content-center mt-3">
+                  <?= $pager->links('cat', 'bootstrap') ?>
+                </div>
+              </div>
+            </div>
 
-</div></div></div>
-
-<!-- Modal Import -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog"><div class="modal-content">
-    <form action="<?= base_url('dashboard/categories/import') ?>" method="post" enctype="multipart/form-data">
-      <?= csrf_field() ?>
-      <div class="modal-header"><h5 class="modal-title">Import Kategori</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label">File (.xlsx/.csv)</label>
-          <input type="file" name="file" accept=".xlsx,.csv" class="form-control" required>
+          </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Batal</button>
-        <button class="btn btn-warning text-dark">Import</button>
-      </div>
-    </form>
-  </div></div>
+    </div>
+  </div>
 </div>
 
-<!-- Modal Form (Create/Edit) -->
-<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog"><div class="modal-content">
-    <form id="categoryForm" method="post" action="<?= base_url('dashboard/categories') ?>">
+<!-- Modal: Tambah/Edit Kategori -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post">
       <?= csrf_field() ?>
+      <input type="hidden" name="id" id="category-id">
+
       <div class="modal-header">
-        <h5 class="modal-title" id="categoryModalTitle">Tambah Kategori</h5>
+        <h5 class="modal-title">Tambah Kategori</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+
       <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label">Nama</label>
-          <input name="name" class="form-control" required>
-        </div>
-        <input type="hidden" name="slug">
-        <div class="mb-3">
-          <label class="form-label">Parent (opsional)</label>
-          <select name="parent_id" class="form-select">
-            <option value="">— Tidak ada —</option>
-            <?php foreach (($parents ?? []) as $p): ?>
-              <option value="<?= $p['id'] ?>"><?= esc($p['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Nama Kategori</label>
+            <input type="text" name="name" id="category-name" class="form-control" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Kode Kategori</label>
+            <input type="text" name="code" id="category-code" class="form-control" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Kategori Induk</label>
+            <select name="parent_id" id="category-parent_id" class="form-select">
+              <option value="">— Tidak ada —</option>
+              <?php foreach (($categories ?? []) as $c): ?>
+                <option value="<?= $c['id'] ?>"><?= esc($c['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Deskripsi</label>
+            <textarea name="description" id="category-description" class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Status</label>
+            <select name="is_active" id="category-is_active" class="form-select">
+              <option value="1">Aktif</option>
+              <option value="0">Nonaktif</option>
+            </select>
+          </div>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         <button class="btn btn-primary">Simpan</button>
       </div>
     </form>
-  </div></div>
+  </div>
 </div>
 
-<!-- Modal Delete -->
-<div class="modal fade" id="confirmDelete" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog"><div class="modal-content">
-    <form method="post" id="formDelete" action="#">
+
+<!-- Modal: Import Excel -->
+<div class="modal fade" id="importModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" enctype="multipart/form-data" action="<?= base_url('dashboard/categories/import') ?>">
       <?= csrf_field() ?>
-      <div class="modal-header"><h5 class="modal-title">Konfirmasi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">Yakin ingin menghapus data ini?</div>
+      <div class="modal-header">
+        <h5 class="modal-title">Import Kategori</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="file" name="file_excel" class="form-control" accept=".xlsx" required>
+        <small class="text-muted d-block mt-2">Kolom: Nama | Kode | Status</small>
+      </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary">Import</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Konfirmasi Hapus -->
+<div class="modal fade" id="confirmDelete" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" id="deleteForm">
+      <?= csrf_field() ?>
+      <div class="modal-header">
+        <h5 class="modal-title">Hapus Kategori</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Yakin ingin menghapus kategori ini?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
         <button class="btn btn-danger">Hapus</button>
       </div>
     </form>
-  </div></div>
+  </div>
 </div>
 
 <script>
-document.getElementById('confirmDelete').addEventListener('show.bs.modal', e => {
-  const id = e.relatedTarget?.dataset.id;
-  document.getElementById('formDelete').setAttribute('action', '<?= base_url('dashboard/categories') ?>/' + id + '/delete');
-});
+document.addEventListener('DOMContentLoaded', () => {
+  // Modal Tambah/Edit
+  const modal = document.getElementById('categoryModal');
+  modal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const mode = button.getAttribute('data-mode');
+    const form = modal.querySelector('form');
 
-document.getElementById('categoryModal').addEventListener('show.bs.modal', e => {
-  const btn = e.relatedTarget;
-  const form = document.getElementById('categoryForm');
-  const title = document.getElementById('categoryModalTitle');
-
-  if (btn?.dataset.mode === 'edit') {
-    title.textContent = 'Edit Kategori';
-    form.action = '<?= base_url('dashboard/categories') ?>/' + btn.dataset.id + '/update';
-    form.name.value = btn.dataset.name || '';
-    form.slug.value = btn.dataset.slug || '';
-    form.parent_id.value = btn.dataset.parent_id || '';
-  } else {
-    title.textContent = 'Tambah Kategori';
-    form.action = '<?= base_url('dashboard/categories') ?>';
     form.reset();
-  }
+    modal.querySelector('.modal-title').textContent = mode === 'edit' ? 'Edit Kategori' : 'Tambah Kategori';
+    form.action = mode === 'edit' ? '<?= base_url('dashboard/categories/update') ?>' : '<?= base_url('dashboard/categories') ?>';
+
+    if (mode === 'edit') {
+      modal.querySelector('#category-id').value = button.getAttribute('data-id');
+      modal.querySelector('#category-name').value = button.getAttribute('data-name');
+      modal.querySelector('#category-code').value = button.getAttribute('data-code');
+      modal.querySelector('#category-description').value = button.getAttribute('data-description');
+      modal.querySelector('#category-is_active').value = button.getAttribute('data-is_active');
+      modal.querySelector('#category-parent_id').value = button.getAttribute('data-parent_id');
+    }
+  });
+
+  // Modal Delete
+  const deleteModal = document.getElementById('confirmDelete');
+  deleteModal.addEventListener('show.bs.modal', function (event) {
+    const url = event.relatedTarget.getAttribute('data-url');
+    deleteModal.querySelector('form').action = url;
+  });
+
+  // AJAX Pagination
+  $(document).on('click', '.pagination a', function (e) {
+    e.preventDefault();
+    const url = $(this).attr('href');
+    if (!url) return;
+
+    $.get(url, function (response) {
+      const content = $('<div>').html(response).find('#category-wrapper').html();
+      $('#category-wrapper').html(content);
+      window.history.pushState(null, '', url);
+    });
+  });
 });
 </script>
+
+<?php if (!($isAjax ?? false)): ?>
 <?= $this->endSection() ?>
+<?php endif ?>

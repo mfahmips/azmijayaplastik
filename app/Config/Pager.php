@@ -24,8 +24,11 @@ class Pager extends BaseConfig
         'default_full'   => 'CodeIgniter\Pager\Views\default_full',
         'default_simple' => 'CodeIgniter\Pager\Views\default_simple',
         'default_head'   => 'CodeIgniter\Pager\Views\default_head',
-        'custom_pagination' => 'backend/layout/partials/_pagination',
+        'bootstrap'      => 'App\Views\pager\bootstrap', // ini pastikan sesuai
     ];
+
+
+
 
     // Tambahkan ke file app/Config/Pager.php jika belum ada
     public $queryStringSegment = 'page_default';

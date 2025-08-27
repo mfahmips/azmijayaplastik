@@ -6,16 +6,6 @@
   <div class="content-wrapper">
     <div class="container">
 
-      <!-- Header -->
-      <div class="row align-items-center mb-3">
-        <div class="col">
-          <div class="page-description">
-            <h1>Dashboard</h1>
-            <p class="text-muted mb-0">Ringkasan operasional toko hari ini</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Cards Ringkasan -->
       <div class="row g-3">
         <div class="col-xl-4">

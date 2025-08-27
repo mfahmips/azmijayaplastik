@@ -39,7 +39,7 @@
   <?= $this->include('backend/layout/partials/sidebar') ?>
   <?= $this->include('backend/layout/partials/header') ?>
   
-
+  <?= view('backend/layout/partials/_flash') ?>
   <?= $this->renderSection('content') ?>
 
     <!-- Javascripts -->
