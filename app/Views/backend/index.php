@@ -2,164 +2,127 @@
 
 <?= $this->section('content') ?>
 
-<div class="app-content">
-  <div class="content-wrapper">
-    <div class="container">
 
-      <!-- Cards Ringkasan -->
-      <div class="row g-3">
-        <div class="col-xl-4">
-          <div class="card widget widget-stats">
-            <div class="card-body">
-              <div class="widget-stats-container d-flex">
-                <div class="widget-stats-icon widget-stats-icon-primary">
-                  <i class="material-icons-outlined">paid</i>
-                </div>
-                <div class="widget-stats-content flex-fill">
-                  <span class="widget-stats-title">Penjualan Hari Ini</span>
-                  <span class="widget-stats-amount">
-                    <?= 'Rp ' . number_format($summary['sales_today'] ?? 0,0,',','.') ?>
-                  </span>
-                  <span class="widget-stats-info">
-                    <?= (int)($summary['orders_today'] ?? 0) ?> Transaksi
-                  </span>
-                </div>
-                <?php if (isset($summary['sales_growth'])): ?>
-                <div class="widget-stats-indicator <?= ($summary['sales_growth'] ?? 0) >= 0 ? 'widget-stats-indicator-positive' : 'widget-stats-indicator-negative' ?> align-self-start">
-                  <i class="material-icons"><?= ($summary['sales_growth'] ?? 0) >= 0 ? 'keyboard_arrow_up' : 'keyboard_arrow_down' ?></i>
-                  <?= abs((float)$summary['sales_growth']) ?>%
-                </div>
-                <?php endif; ?>
-              </div>
-            </div>
+
+<!-- Start Container Fluid -->
+<div class="container-fluid">
+
+  <!-- Ringkasan Card -->
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1">Penjualan Hari Ini</p>
+            <h4><?= 'Rp ' . number_format($summary['sales_today'] ?? 0, 0, ',', '.') ?></h4>
+            <span class="badge bg-success"><?= (int)($summary['orders_today'] ?? 0) ?> Transaksi</span>
           </div>
-        </div>
-
-        <div class="col-xl-4">
-          <div class="card widget widget-stats">
-            <div class="card-body">
-              <div class="widget-stats-container d-flex">
-                <div class="widget-stats-icon widget-stats-icon-warning">
-                  <i class="material-icons-outlined">shopping_bag</i>
-                </div>
-                <div class="widget-stats-content flex-fill">
-                  <span class="widget-stats-title">Jumlah Transaksi</span>
-                  <span class="widget-stats-amount"><?= (int)($summary['transactions'] ?? 0) ?></span>
-                  <span class="widget-stats-info text-muted">Total bayar: <?= 'Rp ' . number_format($summary['transactions_amount'] ?? 0,0,',','.') ?></span>
-                </div>
-                <?php if (isset($summary['trx_growth'])): ?>
-                <div class="widget-stats-indicator <?= ($summary['trx_growth'] ?? 0) >= 0 ? 'widget-stats-indicator-positive' : 'widget-stats-indicator-negative' ?> align-self-start">
-                  <i class="material-icons"><?= ($summary['trx_growth'] ?? 0) >= 0 ? 'keyboard_arrow_up' : 'keyboard_arrow_down' ?></i>
-                  <?= abs((float)$summary['trx_growth']) ?>%
-                </div>
-                <?php endif; ?>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-xl-4">
-          <div class="card widget widget-stats">
-            <div class="card-body">
-              <div class="widget-stats-container d-flex">
-                <div class="widget-stats-icon widget-stats-icon-danger">
-                  <i class="material-icons-outlined">inventory_2</i>
-                </div>
-                <div class="widget-stats-content flex-fill">
-                  <span class="widget-stats-title">Produk Aktif</span>
-                  <span class="widget-stats-amount"><?= (int)($summary['active_products'] ?? 0) ?></span>
-                  <span class="widget-stats-info">
-                    <?= (int)($summary['low_stock_count'] ?? 0) ?> Hampir Habis
-                  </span>
-                </div>
-                <div class="widget-stats-indicator align-self-start">
-                  <i class="material-icons">warning_amber</i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div><!-- /cards -->
-
-      <div class="row mt-3 g-3">
-        <!-- Produk Hampir Habis -->
-        <div class="col-xl-6">
-          <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5 class="mb-0">Produk Hampir Habis</h5>
-              <a href="<?= base_url('backend/stok-minimum') ?>" class="btn btn-sm btn-outline-primary">Kelola Stok</a>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Produk</th>
-                      <th class="text-end">Stok</th>
-                      <th class="text-end">Min</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  <?php if (!empty($lowStocks)): ?>
-                    <?php foreach ($lowStocks as $item): ?>
-                      <tr>
-                        <td><?= esc($item['name']) ?></td>
-                        <td class="text-end"><?= (int)$item['stock'] ?></td>
-                        <td class="text-end"><?= (int)$item['min_stock'] ?></td>
-                      </tr>
-                    <?php endforeach; ?>
-                  <?php else: ?>
-                    <tr>
-                      <td colspan="3" class="text-center text-muted py-4">Semua stok aman 🎉</td>
-                    </tr>
-                  <?php endif; ?>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aktivitas Terakhir -->
-        <div class="col-xl-6">
-          <div class="card h-100">
-            <div class="card-header">
-              <h5 class="mb-0">Aktivitas Terakhir</h5>
-            </div>
-            <div class="card-body">
-              <?php if (!empty($activities)): ?>
-                <ul class="list-group list-group-flush">
-                  <?php foreach ($activities as $act): ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-start px-0">
-                      <div class="d-flex">
-                        <span class="badge bg-<?= esc($act['color'] ?? 'secondary') ?> me-3 d-flex align-items-center justify-content-center" style="width:28px;height:28px;">
-                          <i class="material-icons-outlined" style="font-size:18px;"><?= esc($act['icon'] ?? 'info') ?></i>
-                        </span>
-                        <div>
-                          <div class="fw-semibold"><?= esc($act['title']) ?></div>
-                          <small class="text-muted"><?= esc($act['desc'] ?? '') ?></small>
-                        </div>
-                      </div>
-                      <small class="text-nowrap text-muted"><?= esc($act['time']) ?></small>
-                    </li>
-                  <?php endforeach; ?>
-                </ul>
-              <?php else: ?>
-                <div class="text-muted">Belum ada aktivitas.</div>
-              <?php endif; ?>
-            </div>
+          <div class="avatar-md bg-soft-primary rounded">
+            <iconify-icon icon="solar:wallet-outline" class="fs-32 avatar-title text-primary"></iconify-icon>
           </div>
         </div>
       </div>
+    </div>
 
-    </div><!-- /container -->
+    <div class="col-md-4">
+      <div class="card card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1">Total Transaksi</p>
+            <h4><?= (int)($summary['transactions'] ?? 0) ?></h4>
+            <span class="text-muted"><?= 'Rp ' . number_format($summary['transactions_amount'] ?? 0, 0, ',', '.') ?></span>
+          </div>
+          <div class="avatar-md bg-soft-warning rounded">
+            <iconify-icon icon="solar:archive-linear" class="fs-32 avatar-title text-warning"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1">Produk Aktif</p>
+            <h4><?= (int)($summary['active_products'] ?? 0) ?></h4>
+            <span class="badge bg-danger"><?= (int)($summary['low_stock_count'] ?? 0) ?> Hampir Habis</span>
+          </div>
+          <div class="avatar-md bg-soft-danger rounded">
+            <iconify-icon icon="solar:box-minimalistic-linear" class="fs-32 avatar-title text-danger"></iconify-icon>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- 2 Column: Produk Hampir Habis & Aktivitas -->
+  <div class="row">
+    <!-- Produk Hampir Habis -->
+    <div class="col-lg-6">
+      <div class="card card-body h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">Produk Hampir Habis</h5>
+          <a href="<?= base_url('dashboard/stok-minimum') ?>" class="btn btn-sm btn-outline-light">Kelola Stok</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle table-dark border-0">
+            <thead class="text-muted">
+              <tr>
+                <th>Produk</th>
+                <th class="text-end">Stok</th>
+                <th class="text-end">Min</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (!empty($lowStocks)): ?>
+                <?php foreach ($lowStocks as $item): ?>
+                  <tr>
+                    <td><?= esc($item['name']) ?></td>
+                    <td class="text-end"><?= (int)$item['stock'] ?></td>
+                    <td class="text-end"><?= (int)$item['min_stock'] ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">Semua stok aman 🎉</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aktivitas Terbaru -->
+    <div class="col-lg-6">
+      <div class="card card-body h-100">
+        <h5 class="card-title mb-3">Aktivitas Terbaru</h5>
+        <?php if (!empty($activities)): ?>
+          <ul class="list-group list-group-flush">
+            <?php foreach ($activities as $act): ?>
+              <li class="list-group-item bg-transparent d-flex justify-content-between align-items-start px-0">
+                <div class="d-flex">
+                  <span class="badge bg-<?= esc($act['color'] ?? 'secondary') ?> me-3 d-flex align-items-center justify-content-center" style="width:28px;height:28px;">
+                    <iconify-icon icon="<?= esc($act['icon'] ?? 'solar:info-circle-outline') ?>" style="font-size:18px;"></iconify-icon>
+
+                  </span>
+                  <div>
+                    <div class="fw-semibold"><?= esc($act['title']) ?></div>
+                    <small class="text-muted"><?= esc($act['desc'] ?? '') ?></small>
+                  </div>
+                </div>
+                <small class="text-nowrap text-muted"><?= esc($act['time']) ?></small>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php else: ?>
+          <div class="text-muted">Belum ada aktivitas.</div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+
 </div>
+<!-- End Container Fluid -->
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script>
-// Placeholder: jika mau ambil data live via AJAX, taruh di sini.
-</script>
 <?= $this->endSection() ?>

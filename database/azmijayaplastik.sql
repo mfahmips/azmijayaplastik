@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Waktu pembuatan: 27 Agu 2025 pada 17.58
+-- Waktu pembuatan: 31 Agu 2025 pada 15.28
 -- Versi server: 8.0.30
 -- Versi PHP: 8.1.10
 
@@ -203,6 +203,32 @@ INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `price`, `qty`, `subtot
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `store_settings`
+--
+
+CREATE TABLE `store_settings` (
+  `id` int UNSIGNED NOT NULL,
+  `store_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `store_owner` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_address` text COLLATE utf8mb4_general_ci,
+  `store_lat` decimal(10,6) DEFAULT NULL,
+  `store_lng` decimal(10,6) DEFAULT NULL,
+  `store_phone` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_country` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'Indonesia',
+  `store_province` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_city` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_business_type` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_stock_method` enum('FIFO','LIFO','Average') COLLATE utf8mb4_general_ci DEFAULT 'FIFO',
+  `store_currency` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'Indonesian Rupiah',
+  `store_ppn` int DEFAULT '0',
+  `store_moto` text COLLATE utf8mb4_general_ci,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `suppliers`
 --
 
@@ -262,6 +288,12 @@ ALTER TABLE `sale_items`
   ADD KEY `product_id` (`product_id`);
 
 --
+-- Indeks untuk tabel `store_settings`
+--
+ALTER TABLE `store_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indeks untuk tabel `suppliers`
 --
 ALTER TABLE `suppliers`
@@ -301,6 +333,12 @@ ALTER TABLE `sales`
 --
 ALTER TABLE `sale_items`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT untuk tabel `store_settings`
+--
+ALTER TABLE `store_settings`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `suppliers`

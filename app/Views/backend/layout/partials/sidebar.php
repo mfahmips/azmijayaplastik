@@ -1,148 +1,95 @@
-<?php
-// Helper kelas aktif & open
-if (!function_exists('is_active')) {
-  function is_active(string|array $patterns): string {
-    $patterns = (array) $patterns;
-    foreach ($patterns as $p) if (url_is($p)) return 'active';
-    return '';
-  }
-}
-if (!function_exists('is_open')) {
-  function is_open(string|array $patterns): string {
-    $patterns = (array) $patterns;
-    foreach ($patterns as $p) if (url_is($p)) return 'open';
-    return '';
-  }
-}
-?>
-<div class="app full-width-header align-content-stretch">
+<!-- App Sidebar -->
 <div class="app-sidebar">
-  <div class="logo text-center py-3">
-    <a href="<?= base_url('dashboard') ?>" class="d-flex align-items-center justify-content-center text-decoration-none">
-        <img src="<?= base_url('assets/backend/images/avatars/avatar.png') ?>" alt="Azmi Jaya Plastik" style="height:40px; margin-right:8px;">
+  <!-- Sidebar Logo -->
+  <div class="logo-box">
+    <a href="<?= site_url('dashboard') ?>" class="logo-dark">
+      <img src="<?= base_url('assets/images/logo-sm.png') ?>" class="logo-sm" alt="logo sm">
+      <img src="<?= base_url('assets/images/logo-dark.png') ?>" class="logo-lg" alt="logo dark">
     </a>
- </div>
+    <a href="<?= site_url('dashboard') ?>" class="logo-light">
+      <img src="<?= base_url('assets/images/logo-sm.png') ?>" class="logo-sm" alt="logo sm">
+      <img src="<?= base_url('assets/images/logo-light.png') ?>" class="logo-lg" alt="logo light">
+    </a>
+  </div>
 
+  <div class="scrollbar" data-simplebar>
+    <ul class="navbar-nav" id="navbar-nav">
 
-  <div class="app-menu">
-    <ul class="accordion-menu">
+      <li class="menu-title">UTAMA</li>
 
-      <!-- ====== Menu Utama ====== -->
-      <li class="sidebar-title">Utama</li>
-
-      <li class="<?= is_active(['dashboard','backend/dashboard']) ?>">
-        <a href="<?= base_url('dashboard') ?>" class="<?= is_active(['dashboard','backend/dashboard']) ?>">
-          <i class="material-icons-two-tone">dashboard</i>Dashboard
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:home-3-line"></iconify-icon></span>
+          <span class="nav-text">Dashboard</span>
         </a>
       </li>
 
-      <li>
-        <a href="<?= base_url('dashboard/kasir') ?>">
-          <i class="material-icons-two-tone">point_of_sale</i>Kasir
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard/kasir') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:calculator-line"></iconify-icon></span>
+          <span class="nav-text">Kasir</span>
         </a>
       </li>
 
+      <li class="menu-title">MASTER DATA</li>
 
-      <!-- ====== Master Data ====== -->
-      <li class="sidebar-title">Master Data</li>
-
-      <li class="<?= is_open([
-        'dashboard/products*',
-        'dashboard/categories*',
-        'dashboard/suppliers*',
-        'dashboard/customers*'
-      ]) ?>">
-        <a href="#">
-          <i class="material-icons-two-tone">inventory_2</i>
-          Produk & Relasi
-          <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
+      <li class="nav-item">
+        <a class="nav-link menu-arrow" href="#menuProduk" data-bs-toggle="collapse" role="button" aria-expanded="false">
+          <span class="nav-icon"><iconify-icon icon="mingcute:box-line"></iconify-icon></span>
+          <span class="nav-text">Produk & Relasi</span>
         </a>
-        <ul class="sub-menu">
-          <li>
-            <a class="<?= is_active('dashboard/products*') ?>" href="<?= base_url('dashboard/products') ?>">
-              Produk
-            </a>
-          </li>
-          <li>
-            <a class="<?= is_active('dashboard/categories*') ?>" href="<?= base_url('dashboard/categories') ?>">
-              Kategori
-            </a>
-          </li>
-          <li>
-            <a class="<?= is_active('dashboard/suppliers*') ?>" href="<?= base_url('dashboard/suppliers') ?>">
-              Supplier
-            </a>
-          </li>
-          <li>
-            <a class="<?= is_active('dashboard/customers*') ?>" href="<?= base_url('dashboard/customers') ?>">
-              Pelanggan
-            </a>
-          </li>
-        </ul>
+        <div class="collapse" id="menuProduk">
+          <ul class="nav sub-navbar-nav">
+            <li class="sub-nav-item">
+              <a class="sub-nav-link" href="<?= site_url('dashboard/products') ?>">Produk</a>
+            </li>
+            <li class="sub-nav-item">
+              <a class="sub-nav-link" href="<?= site_url('dashboard/categories') ?>">Kategori</a>
+            </li>
+            <li class="sub-nav-item">
+              <a class="sub-nav-link" href="<?= site_url('dashboard/suppliers') ?>">Supplier</a>
+            </li>
+            <li class="sub-nav-item">
+              <a class="sub-nav-link" href="<?= site_url('dashboard/customers') ?>">Pelanggan</a>
+            </li>
+          </ul>
+        </div>
       </li>
 
+      <li class="menu-title">STOK & INVENTORI</li>
 
-
-
-      <!-- ====== Stok & Inventori ====== -->
-      <li class="sidebar-title">Stok & Inventori</li>
-
-      <li class="<?= is_open(['backend/stok-masuk*','backend/stok-keluar*','backend/mutasi-stok*','backend/stok-minimum*']) ?>">
-        <a href="#">
-          <i class="material-icons-two-tone">inventory</i>Stok
-          <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard/stok') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:stack-line"></iconify-icon></span>
+          <span class="nav-text">Stok</span>
         </a>
-        <ul class="sub-menu">
-          <li><a class="<?= is_active('backend/stok-masuk*') ?>"    href="<?= base_url('backend/stok-masuk') ?>">Stok Masuk</a></li>
-          <li><a class="<?= is_active('backend/stok-keluar*') ?>"   href="<?= base_url('backend/stok-keluar') ?>">Stok Keluar</a></li>
-          <li><a class="<?= is_active('backend/mutasi-stok*') ?>"   href="<?= base_url('backend/mutasi-stok') ?>">Mutasi Stok</a></li>
-          <li><a class="<?= is_active('backend/stok-minimum*') ?>"  href="<?= base_url('backend/stok-minimum') ?>">Stok Hampir Habis</a></li>
-        </ul>
       </li>
 
-      <!-- ====== Transaksi ====== -->
-      <li class="sidebar-title">Transaksi</li>
+      <li class="menu-title">TRANSAKSI</li>
 
-      <li class="<?= is_open(['backend/penjualan*','backend/pembelian*']) ?>">
-        <a href="#">
-          <i class="material-icons-two-tone">receipt_long</i>Transaksi
-          <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard/transactions') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:receipt-line"></iconify-icon></span>
+          <span class="nav-text">Transaksi Penjualan</span>
         </a>
-        <ul class="sub-menu">
-          <li><a class="<?= is_active('dashboard/penjualan*') ?>" href="<?= base_url('dashboard/penjualan') ?>">Penjualan</a></li>
-          <li><a class="<?= is_active('dashboard/pembelian*') ?>" href="<?= base_url('dashboard/pembelian') ?>">Pembelian</a></li>
-        </ul>
-
       </li>
 
-      <!-- ====== Laporan ====== -->
-      <li class="sidebar-title">Laporan</li>
+      <li class="menu-title">PENGATURAN</li>
 
-      <li class="<?= is_open(['backend/laporan/penjualan*','backend/laporan/pembelian*','backend/laporan/stok*']) ?>">
-        <a href="#">
-          <i class="material-icons-two-tone">analytics</i>Laporan
-          <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard/store-setting') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:settings-5-line"></iconify-icon></span>
+          <span class="nav-text">Pengaturan Toko</span>
         </a>
-        <ul class="sub-menu">
-          <li><a class="<?= is_active('backend/laporan/penjualan*') ?>" href="<?= base_url('backend/laporan/penjualan') ?>">Penjualan</a></li>
-          <li><a class="<?= is_active('backend/laporan/pembelian*') ?>" href="<?= base_url('backend/laporan/pembelian') ?>">Pembelian</a></li>
-          <li><a class="<?= is_active('backend/laporan/stok*') ?>"       href="<?= base_url('backend/laporan/stok') ?>">Stok</a></li>
-        </ul>
       </li>
 
-      <!-- ====== Pengaturan ====== -->
-      <li class="sidebar-title">Pengaturan</li>
+      <li class="menu-title">LAPORAN</li>
 
-      <li class="<?= is_open(['backend/pengaturan*','backend/users*','backend/backup*']) ?>">
-        <a href="#">
-          <i class="material-icons-two-tone">settings</i>Pengaturan
-          <i class="material-icons has-sub-menu">keyboard_arrow_right</i>
+      <li class="nav-item">
+        <a class="nav-link" href="<?= site_url('dashboard/reports') ?>">
+          <span class="nav-icon"><iconify-icon icon="mingcute:file-chart-line"></iconify-icon></span>
+          <span class="nav-text">Laporan</span>
         </a>
-        <ul class="sub-menu">
-          <li><a class="<?= is_active('backend/pengaturan') ?>" href="<?= base_url('backend/pengaturan') ?>">Profil Toko</a></li>
-          <li><a class="<?= is_active('backend/users*') ?>"     href="<?= base_url('backend/users') ?>">Pengguna & Role</a></li>
-          <li><a class="<?= is_active('backend/backup*') ?>"    href="<?= base_url('backend/backup') ?>">Backup / Restore</a></li>
-        </ul>
       </li>
 
     </ul>

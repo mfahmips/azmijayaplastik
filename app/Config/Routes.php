@@ -68,4 +68,9 @@ $routes->group('dashboard', static function($routes) {
     $routes->post('penjualan/update', 'Backend\Transaksi\Penjualan::update');
     $routes->post('penjualan/(:num)/delete', 'Backend\Transaksi\Penjualan::delete/$1');
 
+
+    $routes->get('store-setting', 'Backend\StoreSetting::index');
+    $routes->post('store-setting/update', 'Backend\StoreSetting::update');
+
+
 });
