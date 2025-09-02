@@ -1,76 +1,121 @@
-<!-- Topbar Start -->
-<header class="app-topbar">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <div class="d-flex align-items-center gap-2">
+<!--start top header-->
+<header class="top-header">
+  <nav class="navbar navbar-expand gap-3">
+    <div class="toggle-icon">
+      <ion-icon name="menu-outline"></ion-icon>
+    </div>
 
-        <!-- Menu Toggle Button -->
-        <div class="topbar-item">
-          <button type="button" class="button-toggle-menu topbar-button">
-            <iconify-icon icon="solar:hamburger-menu-outline" class="fs-24 align-middle"></iconify-icon>
-          </button>
-        </div>
-
+    <form class="searchbar">
+      <div class="position-absolute top-50 translate-middle-y search-icon ms-3">
+        <ion-icon name="search-outline"></ion-icon>
       </div>
+      <input class="form-control" type="text" placeholder="Search for anything">
+      <div class="position-absolute top-50 translate-middle-y search-close-icon">
+        <ion-icon name="close-outline"></ion-icon>
+      </div>
+    </form>
 
-      <div class="d-flex align-items-center gap-2">
+    <div class="top-navbar-right ms-auto">
+      <ul class="navbar-nav align-items-center">
 
-        <!-- Theme Switch (Light/Dark) -->
-        <div class="topbar-item">
-          <button type="button" class="topbar-button" id="light-dark-mode">
-            <iconify-icon icon="solar:moon-outline" class="fs-22 align-middle light-mode"></iconify-icon>
-            <iconify-icon icon="solar:sun-2-outline" class="fs-22 align-middle dark-mode"></iconify-icon>
-          </button>
-        </div>
+        <li class="nav-item">
+          <a class="nav-link mobile-search-button" href="javascript:;">
+            <ion-icon name="search-outline"></ion-icon>
+          </a>
+        </li>
 
-        <!-- Notifikasi (Opsional Aktif) -->
-        <div class="dropdown topbar-item">
-          <button type="button" class="topbar-button position-relative" data-bs-toggle="dropdown">
-            <iconify-icon icon="solar:bell-bing-outline" class="fs-22 align-middle"></iconify-icon>
-            <span class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">1</span>
-          </button>
-          <div class="dropdown-menu dropdown-menu-end dropdown-lg p-3">
-            <h6 class="mb-2 fw-bold">Notifikasi</h6>
-            <div style="max-height: 200px;" data-simplebar>
-              <a href="#" class="dropdown-item d-flex align-items-center py-2">
-                <div class="avatar-sm me-3">
-                  <span class="avatar-title bg-soft-warning text-warning rounded-circle">
-                    <iconify-icon icon="solar:warning-outline"></iconify-icon>
-                  </span>
+        <li class="nav-item">
+          <a class="nav-link dark-mode-icon" href="javascript:;">
+            <ion-icon name="moon-outline"></ion-icon>
+          </a>
+        </li>
+
+        <!-- Apps dropdown -->
+        <li class="nav-item dropdown dropdown-large dropdown-apps">
+          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
+            <ion-icon name="apps-outline"></ion-icon>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+            <div class="row row-cols-3 g-3 p-3">
+              <div class="col text-center">
+                <div class="app-box mx-auto bg-gradient-purple text-white">
+                  <ion-icon name="cart-outline"></ion-icon>
                 </div>
-                <div>
-                  <p class="mb-0">Stok produk <strong>Gelas Plastik</strong> hampir habis.</p>
+                <div class="app-title">Orders</div>
+              </div>
+              <div class="col text-center">
+                <div class="app-box mx-auto bg-gradient-info text-white">
+                  <ion-icon name="people-outline"></ion-icon>
                 </div>
-              </a>
-            </div>
-            <div class="mt-2 text-center">
-              <a href="<?= site_url('dashboard/stok') ?>" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+                <div class="app-title">Teams</div>
+              </div>
+              <div class="col text-center">
+                <div class="app-box mx-auto bg-gradient-success text-white">
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                </div>
+                <div class="app-title">Tasks</div>
+              </div>
+              <!-- ... lanjutkan isi lain bila perlu -->
             </div>
           </div>
-        </div>
+        </li>
 
-        <!-- User Dropdown -->
-        <div class="dropdown topbar-item">
-          <a class="topbar-button" data-bs-toggle="dropdown" href="#">
-            <img class="rounded-circle" src="<?= base_url('assets/images/users/avatar-1.jpg') ?>" width="32" alt="User">
+        <!-- Notifications -->
+        <li class="nav-item dropdown dropdown-large">
+          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
+            <div class="position-relative">
+              <span class="notify-badge">8</span>
+              <ion-icon name="notifications-outline"></ion-icon>
+            </div>
           </a>
           <div class="dropdown-menu dropdown-menu-end">
-            <h6 class="dropdown-header">Selamat datang!</h6>
-
-            <a class="dropdown-item" href="#">
-              <iconify-icon icon="solar:user-outline" class="me-2"></iconify-icon>
-              Akun Saya
-            </a>
-            <div class="dropdown-divider my-1"></div>
-            <a class="dropdown-item text-danger" href="<?= site_url('auth/logout') ?>">
-              <iconify-icon icon="solar:logout-3-outline" class="me-2"></iconify-icon>
-              Keluar
-            </a>
+            <a href="#"><div class="msg-header"><p class="msg-header-title">Notifications</p></div></a>
+            <div class="header-notifications-list">
+              <a class="dropdown-item" href="#">
+                <div class="d-flex align-items-center">
+                  <div class="notify text-primary">
+                    <ion-icon name="cart-outline"></ion-icon>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="msg-name">New Orders</h6>
+                    <p class="msg-info">You have new orders</p>
+                  </div>
+                </div>
+              </a>
+              <!-- ... tambahkan notifikasi lain jika perlu -->
+            </div>
           </div>
-        </div>
+        </li>
 
-      </div>
+        <!-- User dropdown -->
+        <li class="nav-item dropdown dropdown-user-setting">
+          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
+            <div class="user-setting">
+              <img src="<?= base_url('assets/backend/images/avatars/06.png') ?>" class="user-img" alt="User">
+            </div>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="#">
+                <div class="d-flex align-items-center gap-2">
+                  <img src="<?= base_url('assets/backend/images/avatars/06.png') ?>" class="rounded-circle" width="54" height="54">
+                  <div>
+                    <h6 class="mb-0 dropdown-user-name">Jhon Deo</h6>
+                    <small class="text-secondary">UI Developer</small>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#"><ion-icon name="person-outline"></ion-icon> <span class="ms-3">Profile</span></a></li>
+            <li><a class="dropdown-item" href="#"><ion-icon name="settings-outline"></ion-icon> <span class="ms-3">Settings</span></a></li>
+            <li><a class="dropdown-item" href="#"><ion-icon name="log-out-outline"></ion-icon> <span class="ms-3">Logout</span></a></li>
+          </ul>
+        </li>
+
+      </ul>
     </div>
-  </div>
+
+  </nav>
 </header>
-<!-- Topbar End -->
+<!--end top header-->

@@ -1,97 +1,77 @@
-<!-- App Sidebar -->
-<div class="app-sidebar">
-  <!-- Sidebar Logo -->
-  <div class="logo-box">
-    <a href="<?= site_url('dashboard') ?>" class="logo-dark">
-      <img src="<?= base_url('assets/images/logo-sm.png') ?>" class="logo-sm" alt="logo sm">
-      <img src="<?= base_url('assets/images/logo-dark.png') ?>" class="logo-lg" alt="logo dark">
-    </a>
-    <a href="<?= site_url('dashboard') ?>" class="logo-light">
-      <img src="<?= base_url('assets/images/logo-sm.png') ?>" class="logo-sm" alt="logo sm">
-      <img src="<?= base_url('assets/images/logo-light.png') ?>" class="logo-lg" alt="logo light">
-    </a>
-  </div>
+<!--start wrapper-->
+<div class="wrapper">
 
-  <div class="scrollbar" data-simplebar>
-    <ul class="navbar-nav" id="navbar-nav">
+  <!--start sidebar -->
+  <aside class="sidebar-wrapper" data-simplebar="true">
+    <div class="sidebar-header">
+      <div>
+        <img src="<?= base_url('assets/backend/images/logo-icon-2.png') ?>" class="logo-icon" alt="logo icon">
+      </div>
+      <div>
+        <h4 class="logo-text">Azmi Jaya</h4>
+      </div>
+    </div>
 
-      <li class="menu-title">UTAMA</li>
+    <!--navigation-->
+    <ul class="metismenu" id="menu">
 
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:home-3-line"></iconify-icon></span>
-          <span class="nav-text">Dashboard</span>
+      <!-- Dashboard -->
+      <li>
+        <a href="<?= base_url('dashboard') ?>">
+          <div class="parent-icon"><ion-icon name="home-outline"></ion-icon></div>
+          <div class="menu-title">Dashboard</div>
         </a>
       </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard/kasir') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:calculator-line"></iconify-icon></span>
-          <span class="nav-text">Kasir</span>
+      <!-- Kasir -->
+      <li>
+        <a href="<?= base_url('dashboard/sales/create') ?>">
+          <div class="parent-icon"><ion-icon name="cash-outline"></ion-icon></div>
+          <div class="menu-title">Kasir</div>
         </a>
       </li>
 
-      <li class="menu-title">MASTER DATA</li>
+      <!-- Master Data -->
+      <li class="menu-label">Master Data</li>
 
-      <li class="nav-item">
-        <a class="nav-link menu-arrow" href="#menuProduk" data-bs-toggle="collapse" role="button" aria-expanded="false">
-          <span class="nav-icon"><iconify-icon icon="mingcute:box-line"></iconify-icon></span>
-          <span class="nav-text">Produk & Relasi</span>
+      <li>
+        <a href="<?= base_url('dashboard/products') ?>">
+          <div class="parent-icon"><ion-icon name="cube-outline"></ion-icon></div>
+          <div class="menu-title">Produk</div>
         </a>
-        <div class="collapse" id="menuProduk">
-          <ul class="nav sub-navbar-nav">
-            <li class="sub-nav-item">
-              <a class="sub-nav-link" href="<?= site_url('dashboard/products') ?>">Produk</a>
-            </li>
-            <li class="sub-nav-item">
-              <a class="sub-nav-link" href="<?= site_url('dashboard/categories') ?>">Kategori</a>
-            </li>
-            <li class="sub-nav-item">
-              <a class="sub-nav-link" href="<?= site_url('dashboard/suppliers') ?>">Supplier</a>
-            </li>
-            <li class="sub-nav-item">
-              <a class="sub-nav-link" href="<?= site_url('dashboard/customers') ?>">Pelanggan</a>
-            </li>
-          </ul>
-        </div>
       </li>
-
-      <li class="menu-title">STOK & INVENTORI</li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard/stok') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:stack-line"></iconify-icon></span>
-          <span class="nav-text">Stok</span>
+      <li>
+        <a href="<?= base_url('dashboard/categories') ?>">
+          <div class="parent-icon"><ion-icon name="albums-outline"></ion-icon></div>
+          <div class="menu-title">Kategori</div>
+        </a>
+      </li>
+      <li>
+        <a href="<?= base_url('dashboard/suppliers') ?>">
+          <div class="parent-icon"><ion-icon name="business-outline"></ion-icon></div>
+          <div class="menu-title">Supplier</div>
         </a>
       </li>
 
-      <li class="menu-title">TRANSAKSI</li>
+      <!-- Pengaturan -->
+      <li class="menu-label">Settings</li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard/transactions') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:receipt-line"></iconify-icon></span>
-          <span class="nav-text">Transaksi Penjualan</span>
+      <li>
+        <a href="<?= base_url('dashboard/store-setting') ?>">
+          <div class="parent-icon"><ion-icon name="storefront-outline"></ion-icon></div>
+          <div class="menu-title">Profil Toko</div>
         </a>
       </li>
 
-      <li class="menu-title">PENGATURAN</li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard/store-setting') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:settings-5-line"></iconify-icon></span>
-          <span class="nav-text">Pengaturan Toko</span>
-        </a>
-      </li>
-
-      <li class="menu-title">LAPORAN</li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="<?= site_url('dashboard/reports') ?>">
-          <span class="nav-icon"><iconify-icon icon="mingcute:file-chart-line"></iconify-icon></span>
-          <span class="nav-text">Laporan</span>
+      <li>
+        <a href="<?= base_url('dashboard/support') ?>">
+          <div class="parent-icon"><ion-icon name="help-circle-outline"></ion-icon></div>
+          <div class="menu-title">Support</div>
         </a>
       </li>
 
     </ul>
-  </div>
-</div>
+    <!--end navigation-->
+
+  </aside>
+  <!--end sidebar-->
