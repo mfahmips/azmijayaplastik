@@ -25,17 +25,24 @@ class Kasir extends BaseController
         return view('backend/kasir/index');
     }
 
-    public function cariProduk()
-    {
-        $keyword = $this->request->getGet('q');
+public function cariProduk()
+{
+    $keyword = $this->request->getGet('q');
 
-        $produk = $this->productModel
-            ->like('barcode', $keyword)
-            ->orLike('name', $keyword)
-            ->findAll(10);
+    $produk = $this->productModel
+        ->select('id, name, sell_price')
+        ->groupStart()
+            ->like('name', $keyword)
+            ->orLike('sku', $keyword)
+            ->orLike('barcode', $keyword)
+        ->groupEnd()
+        ->limit(10)
+        ->find();
 
-        return $this->response->setJSON($produk);
-    }
+    return $this->response->setJSON($produk);
+}
+
+
 
     public function tambahProdukBaru()
     {
@@ -137,6 +144,14 @@ public function penjualanData()
 
     return $this->response->setJSON($sales);
 }
+
+public function cetak($invoice)
+{
+    $sale = $this->saleModel->where('invoice', $invoice)->first();
+    $items = $this->saleItemModel->where('sale_id', $sale['id'])->findAll();
+    return view('backend/kasir/print', compact('sale', 'items'));
+}
+
 
 
 }

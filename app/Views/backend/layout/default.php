@@ -5,6 +5,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <?php
+  $storeModel = new \App\Models\StoreSettingModel();
+  $store = $storeModel->first();
+  ?>
+  <link rel="icon" type="image/png" href="<?= base_url($store['store_logo'] ?? 'assets/images/default-favicon.png') ?>">
+
+
+
   <!-- Title -->
   <title><?= esc($title ?? 'Dashboard') ?></title>
 
@@ -16,6 +24,8 @@
   <link href="<?= base_url('assets/backend/plugins/simplebar/css/simplebar.css') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/backend/plugins/perfect-scrollbar/css/perfect-scrollbar.css') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/backend/plugins/metismenu/css/metisMenu.min.css') ?>" rel="stylesheet" />
+  <link rel="stylesheet" href="<?= base_url('assets/backend/plugins/apexcharts-bundle/css/apexcharts.css') ?>">
+
 
   <!-- Core CSS -->
   <link href="<?= base_url('assets/backend/css/bootstrap.min.css') ?>" rel="stylesheet">
@@ -32,6 +42,11 @@
   <link href="<?= base_url('assets/backend/css/dark-theme.css') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/backend/css/semi-dark.css') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/backend/css/header-colors.css') ?>" rel="stylesheet" />
+
+  <!-- jQuery UI CSS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+
 </head>
 
 <body>
@@ -51,6 +66,10 @@
     <?= $this->renderSection('content') ?>
 
 
+     <!--Start Back To Top Button-->
+     <a href="javaScript:;" class="back-to-top"><ion-icon name="arrow-up-outline"></ion-icon></a>
+     <!--End Back To Top Button-->
+
   <!-- JS Scripts -->
   <script src="<?= base_url('assets/backend/js/jquery.min.js') ?>"></script>
   <script src="<?= base_url('assets/backend/plugins/simplebar/js/simplebar.min.js') ?>"></script>
@@ -65,6 +84,17 @@
   <script src="<?= base_url('assets/backend/plugins/easyPieChart/jquery.easypiechart.js') ?>"></script>
   <script src="<?= base_url('assets/backend/plugins/chartjs/chart.min.js') ?>"></script>
   <script src="<?= base_url('assets/backend/js/index.js') ?>"></script>
+  <!-- Notifikasi (Lobibox) -->
+  <script src="<?= base_url('assets/backend/plugins/notifications/js/lobibox.min.js') ?>"></script>
+  <script src="<?= base_url('assets/backend/plugins/notifications/js/notifications.min.js') ?>"></script>
+  <script src="<?= base_url('assets/backend/plugins/notifications/js/notification-custom-script.js') ?>"></script>
+
+  
+  <script src="<?= base_url('assets/backend/js/widgets.js') ?>"></script>
+  <script src="<?= base_url('assets/backend/plugins/apexcharts-bundle/js/apexcharts.min.js') ?>"></script>
+
+<!-- jQuery UI JS -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 
   <!-- Main -->
   <script src="<?= base_url('assets/backend/js/main.js') ?>"></script>

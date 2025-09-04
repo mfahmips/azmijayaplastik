@@ -1,318 +1,249 @@
 <?= $this->extend('backend/layout/default') ?>
-
 <?= $this->section('content') ?>
-<div class="app-content">
-  <div class="content-wrapper">
-    <div class="container">
-      <div class="row align-items-center mb-3">
-        <div class="col">
-          <div class="page-description">
-            <h1>Kasir</h1>
-            <p class="text-muted mb-0">Point of Sale – cepatkan transaksi di toko.</p>
-          </div>
+
+<div class="page-content">
+  <h4>Kasir</h4>
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Daftar Belanja</span>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalProdukBaru">Tambah Produk Baru</button>
+        </div>
+        <div class="card-body">
+          <input type="text" id="cariProduk" class="form-control mb-3" placeholder="Ketik nama / scan barcode...">
+          <table class="table table-sm table-dark table-bordered" id="tabelBelanja">
+            <thead>
+              <tr>
+                <th>Produk</th>
+                <th>Qty</th>
+                <th>Harga</th>
+                <th>Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
+    </div>
 
-      <div class="row g-3">
-        <!-- Kolom kiri: cari produk -->
-        <div class="col-lg-7">
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <div class="flex-grow-1 me-2">
-                <div class="input-group">
-                  <span class="input-group-text"><i class="material-icons-outlined">search</i></span>
-                  <input type="text" class="form-control" placeholder="Cari Produk" id="input-cari">
-                </div>
-              </div>
-              <button class="btn btn-outline-primary" onclick="bukaModalTambahProduk()">
-                <i class="material-icons-outlined">add</i> Tambah Produk
-              </button>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table mb-0 align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Produk</th><th class="text-end">Harga</th><th class="text-center">Stok</th><th class="text-end">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="produk-list">
-                    <tr><td colspan="4" class="text-center text-muted py-4">Muat data produk…</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Ringkasan</div>
+        <div class="card-body">
+          <p>Total Item: <span id="totalItems">0</span></p>
+          <p>Total Harga: Rp <span id="totalHarga">0</span></p>
+          <div class="mb-2">
+            <label for="pembayaran">Pembayaran</label>
+            <input type="number" id="pembayaran" class="form-control">
           </div>
-        </div>
-
-        <!-- Kolom kanan: keranjang -->
-        <div class="col-lg-5">
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Keranjang</h5>
-              <button class="btn btn-sm btn-outline-danger" id="btn-clear-cart">
-                <i class="material-icons-outlined">delete_sweep</i> Kosongkan
-              </button>
-            </div>
-            <div class="card-body p-0">
-              <ul class="list-group list-group-flush" id="cart-list">
-                <li class="list-group-item text-muted">Belum ada item.</li>
-              </ul>
-            </div>
-            <div class="card-footer">
-              <div class="d-flex justify-content-between">
-                <span class="fw-semibold">Total</span>
-                <span class="fw-bold" id="cart-total">Rp 0</span>
-              </div>
-              <div class="mt-3 d-grid">
-                <button class="btn btn-primary" id="btn-bayar">
-                  <i class="material-icons-outlined me-1">point_of_sale</i> Bayar
-                </button>
-              </div>
-            </div>
-          </div>
+          <p>Kembalian: Rp <span id="kembalian">0</span></p>
+          <button class="btn btn-success w-100" id="btnSimpan">Simpan Transaksi</button>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
-<<!-- Modal Tambah Produk -->
-<div class="modal fade" id="modal-tambah-produk" tabindex="-1">
+<!-- Modal Produk Baru -->
+<div class="modal fade" id="modalProdukBaru" tabindex="-1">
   <div class="modal-dialog">
-    <form class="modal-content" id="form-tambah-produk">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Tambah Produk Baru</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="newName" class="form-label">Nama Produk</label>
-          <input type="text" class="form-control" name="name" id="newName" required>
+          <label>Nama Produk</label>
+          <input type="text" id="namaProdukBaru" class="form-control">
         </div>
-        <div class="mb-2">
-          <label for="newSellPrice" class="form-label">Harga Jual</label>
-          <input type="number" class="form-control" name="sell_price" id="newSellPrice" min="0" step="1" placeholder="0">
-          <small class="text-muted">Biarkan 0 jika belum ada harga.</small>
+        <div class="mb-3">
+          <label>Harga Jual</label>
+          <input type="number" id="hargaProdukBaru" class="form-control">
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary" id="btnSimpanProdukBaru">Simpan</button>
       </div>
-    </form>
+    </div>
   </div>
 </div>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
 <script>
-let produkList = [];
-let cart = [];
+let belanja = [];
 
-function loadProduk(keyword = '') {
-  $('#produk-list').html('<tr><td colspan="4" class="text-center text-muted py-4">Memuat...</td></tr>');
+$(document).ready(function () {
+  // Select2 input produk (dengan input manual untuk produk baru)
+  $('#cariProduk').select2({
+    placeholder: 'Cari produk...',
+    allowClear: true,
+    tags: true,
+    createTag: function (params) {
+      let term = $.trim(params.term);
+      if (term === '') return null;
+      return {
+        id: 'new:' + term,
+        text: term,
+        isNew: true
+      };
+    },
+    ajax: {
+      url: '<?= base_url('kasir/cariProduk') ?>',
+      dataType: 'json',
+      delay: 250,
+      data: params => ({ q: params.term }),
+      processResults: data => ({
+        results: data.map(p => ({
+          id: p.id,
+          text: p.name,
+          price: parseFloat(p.sell_price || 0),
+          isNew: false
+        }))
+      }),
+      cache: true
+    },
+    escapeMarkup: markup => markup
+  }).on('select2:select', function (e) {
+    const p = e.params.data;
 
-  $.get('<?= base_url('dashboard/kasir/cariProduk') ?>', { q: keyword }, function(res) {
-    produkList = res;
-    if (!res.length) {
-      $('#produk-list').html(`<tr><td colspan="4" class="text-center text-muted py-3">Tidak ditemukan.</td></tr>`);
-      return;
+    if (p.isNew) {
+      // Jika input manual, buka modal produk baru
+      $('#namaProdukBaru').val(p.text);
+      $('#modalProdukBaru').modal('show');
+    } else {
+      tambahProduk(p);
     }
 
-    let html = '';
-    res.forEach(prod => {
-      html += `
-        <tr>
-          <td>${prod.name}</td>
-          <td class="text-end">Rp ${parseInt(prod.sell_price || 0).toLocaleString()}</td>
-          <td class="text-center">${prod.stock || 0}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-success" onclick="tambahKeKeranjang(${prod.id})">
-              <i class="material-icons-outlined">add_shopping_cart</i>
-            </button>
-          </td>
-        </tr>`;
-    });
-    $('#produk-list').html(html);
+    $(this).val(null).trigger('change');
   });
-}
 
-function tambahKeKeranjang(id) {
-  const produk = produkList.find(p => p.id == id);
-  if (!produk) return;
+  // Event lainnya
+  $('#btnSimpan').on('click', simpanTransaksi);
+  $('#pembayaran').on('input', hitungKembalian);
+  $('#btnSimpanProdukBaru').on('click', simpanProdukBaru);
+});
 
-  const exist = cart.find(item => item.id == id);
-  if (exist) {
-    exist.qty += 1;
-    exist.subtotal = exist.qty * exist.price;
+function tambahProduk(p) {
+  const idx = belanja.findIndex(i => i.id == p.id);
+  if (idx >= 0) {
+    belanja[idx].qty++;
   } else {
-    cart.push({
-      id: produk.id,
-      name: produk.name,
-      price: parseInt(produk.sell_price || 0),
-      qty: 1,
-      subtotal: parseInt(produk.sell_price || 0)
-    });
+    belanja.push({ ...p, qty: 1 });
   }
-  renderCart();
+  renderTabel();
 }
 
-function tambahKeKeranjangSetelahTambah(produk) {
-  cart.push({
-    id: produk.id,
-    name: produk.name,
-    price: 0,
-    qty: 1,
-    subtotal: 0
-  });
-  renderCart();
-}
+function renderTabel() {
+  const tbody = $('#tabelBelanja tbody').empty();
+  let total = 0, items = 0;
 
-function renderCart() {
-  if (!cart.length) {
-    $('#cart-list').html('<li class="list-group-item text-muted">Belum ada item.</li>');
-    $('#cart-total').text('Rp 0');
-    return;
-  }
+  belanja.forEach((item, i) => {
+    const subtotal = item.qty * item.price;
+    total += subtotal;
+    items += item.qty;
 
-  let html = '';
-  let total = 0;
-
-  cart.forEach((item, i) => {
-    total += item.subtotal;
-    html += `
-      <li class="list-group-item d-flex justify-content-between align-items-start">
-        <div class="me-auto">
-          <div class="fw-bold">${item.name}</div>
-          <small>${item.qty} x Rp ${item.price.toLocaleString()} = Rp ${item.subtotal.toLocaleString()}</small>
-        </div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" onclick="ubahQty(${i}, -1)">-</button>
-          <button class="btn btn-outline-secondary" onclick="ubahQty(${i}, 1)">+</button>
-          <button class="btn btn-outline-danger" onclick="hapusItem(${i})">&times;</button>
-        </div>
-      </li>`;
+    tbody.append(`
+      <tr>
+        <td>${item.text}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="ubahQty(${i}, -1)">-</button>
+          <span class="mx-2">${item.qty}</span>
+          <button class="btn btn-sm btn-secondary" onclick="ubahQty(${i}, 1)">+</button>
+        </td>
+        <td>Rp ${item.price.toLocaleString()}</td>
+        <td>Rp ${subtotal.toLocaleString()}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="hapusItem(${i})">🗑</button></td>
+      </tr>
+    `);
   });
 
-  $('#cart-list').html(html);
-  $('#cart-total').text('Rp ' + total.toLocaleString());
+  $('#totalItems').text(items);
+  $('#totalHarga').text(`Rp ${total.toLocaleString()}`);
+  hitungKembalian();
 }
 
 function ubahQty(index, delta) {
-  cart[index].qty += delta;
-  if (cart[index].qty <= 0) {
-    cart.splice(index, 1);
-  } else {
-    cart[index].subtotal = cart[index].qty * cart[index].price;
-  }
-  renderCart();
+  belanja[index].qty += delta;
+  if (belanja[index].qty <= 0) belanja.splice(index, 1);
+  renderTabel();
 }
 
 function hapusItem(index) {
-  cart.splice(index, 1);
-  renderCart();
+  belanja.splice(index, 1);
+  renderTabel();
 }
 
-function bukaModalTambahProduk() {
-  $('#form-tambah-produk')[0].reset();
-  $('#modal-tambah-produk').modal('show');
+function hitungKembalian() {
+  const total = belanja.reduce((acc, i) => acc + i.qty * i.price, 0);
+  const bayar = parseInt($('#pembayaran').val() || 0);
+  const kembali = bayar - total;
+  $('#kembalian').text(`Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`);
 }
 
-$('#form-tambah-produk').on('submit', function(e) {
-  e.preventDefault();
+function simpanTransaksi() {
+  const total = belanja.reduce((acc, i) => acc + i.qty * i.price, 0);
+  const bayar = parseInt($('#pembayaran').val() || 0);
 
-  const name = $('#newName').val().trim();
-  const sellPrice = parseInt($('#newSellPrice').val() || 0, 10);
+  if (!belanja.length) return alert('Daftar belanja kosong!');
+  if (bayar < total) return alert('Pembayaran kurang dari total.');
 
-  if (!name) {
-    alert('Nama produk wajib diisi.');
-    return;
-  }
+  const items = belanja.map(p => ({
+    id: p.id,
+    price: p.price,
+    qty: p.qty,
+    subtotal: p.qty * p.price
+  }));
 
-  const payload = { name: name, sell_price: sellPrice };
-
-  $.post('<?= base_url('dashboard/kasir/tambahProdukBaru') ?>', payload, function(res) {
-    if (res.status === 'ok') {
-      $('#modal-tambah-produk').modal('hide');
-      const p = res.produk;
-      cart.push({
-        id: p.id,
-        name: p.name,
-        price: parseInt(p.sell_price || 0, 10),
-        qty: 1,
-        subtotal: parseInt(p.sell_price || 0, 10)
-      });
-      renderCart();
-    } else {
-      alert(res.message || 'Gagal menyimpan produk.');
-    }
-  });
-});
-
-
-$('#input-cari').on('keyup', function() {
-  loadProduk(this.value);
-});
-
-$('#btn-clear-cart').on('click', function() {
-  if (confirm('Kosongkan keranjang?')) {
-    cart = [];
-    renderCart();
-  }
-});
-
-$('#btn-bayar').on('click', function () {
-  if (!cart.length) {
-    alert('Keranjang masih kosong.');
-    return;
-  }
-
-  const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
-  const payment = prompt('Masukkan jumlah pembayaran:', total);
-
-  if (!payment || isNaN(payment) || parseInt(payment) < total) {
-    alert('Pembayaran tidak valid atau kurang.');
-    return;
-  }
-
-  const payload = {
-    items: cart,
-    total_price: total,
-    payment: parseInt(payment)
-  };
-
-  console.log('Kirim data:', payload); // ⬅ Tambahkan ini
-
-  $.ajax({
-    url: '<?= base_url('dashboard/kasir/simpanTransaksi') ?>',
+  fetch('<?= base_url('kasir/simpanTransaksi') ?>', {
     method: 'POST',
-    contentType: 'application/json',
-    data: JSON.stringify(payload),
-    success: function (res) {
-      console.log('Respon:', res); // ⬅ Tambahkan ini
-
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items, total_price: total, payment: bayar })
+  })
+    .then(res => res.json())
+    .then(res => {
       if (res.status === 'ok') {
-        alert('Transaksi berhasil disimpan.\nInvoice: ' + res.invoice);
-        cart = [];
-        renderCart();
-        loadProduk();
+        alert('Transaksi berhasil! Invoice: ' + res.invoice);
+        location.reload();
       } else {
-        alert(res.message || 'Terjadi kesalahan.');
+        alert('Gagal simpan: ' + res.message);
       }
-    },
-    error: function (xhr) {
-      console.error('AJAX Error:', xhr.responseText); // ⬅ Tangkap error backend
-      alert('Gagal menyimpan transaksi (500).');
-    }
-  });
-});
+    });
+}
 
+function simpanProdukBaru() {
+  const name = $('#namaProdukBaru').val().trim();
+  const price = parseInt($('#hargaProdukBaru').val()) || 0;
 
-$(document).ready(function() {
-  loadProduk();
-});
+  if (!name || price <= 0) {
+    alert('Isi nama dan harga produk.');
+    return;
+  }
+
+  fetch('<?= base_url('kasir/tambahProdukBaru') ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ name, sell_price: price })
+  })
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        alert('Produk berhasil ditambahkan.');
+        tambahProduk({
+          id: res.produk.id,
+          text: res.produk.name,
+          price: parseFloat(res.produk.sell_price)
+        });
+        $('#modalProdukBaru').modal('hide');
+        $('#namaProdukBaru').val('');
+        $('#hargaProdukBaru').val('');
+      } else {
+        alert(res.message);
+      }
+    });
+}
+
 </script>
+
 <?= $this->endSection() ?>

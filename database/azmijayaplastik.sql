@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Waktu pembuatan: 31 Agu 2025 pada 15.28
+-- Waktu pembuatan: 04 Sep 2025 pada 14.23
 -- Versi server: 8.0.30
 -- Versi PHP: 8.1.10
 
@@ -208,23 +208,27 @@ INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `price`, `qty`, `subtot
 
 CREATE TABLE `store_settings` (
   `id` int UNSIGNED NOT NULL,
-  `store_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `store_owner` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `store_address` text COLLATE utf8mb4_general_ci,
-  `store_lat` decimal(10,6) DEFAULT NULL,
-  `store_lng` decimal(10,6) DEFAULT NULL,
-  `store_phone` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `store_country` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'Indonesia',
-  `store_province` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `store_city` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `store_business_type` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `store_stock_method` enum('FIFO','LIFO','Average') COLLATE utf8mb4_general_ci DEFAULT 'FIFO',
-  `store_currency` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'Indonesian Rupiah',
-  `store_ppn` int DEFAULT '0',
-  `store_moto` text COLLATE utf8mb4_general_ci,
+  `store_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `store_owner` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `store_logo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `store_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_facebook` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_instagram` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_tiktok` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `store_website` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `store_settings`
+--
+
+INSERT INTO `store_settings` (`id`, `store_name`, `store_owner`, `store_category`, `store_address`, `store_logo`, `store_description`, `store_phone`, `store_facebook`, `store_instagram`, `store_tiktok`, `store_website`, `created_at`, `updated_at`) VALUES
+(1, 'Azmi Jaya Plastik', 'Muhamad Fahmi Purnama Sidiq', 'Toko Plastik dan Bahan Kue', 'Jalan Jembatan Hitam No. 1 RT. 03/10 Desa Cijujung Kec. Sukaraja Kab. Bogor', 'uploads/website/logo/1756990951_3eb4812f75684798e218.png', '', '08561331998', '', '', '', '', '2025-09-04 12:29:43', '2025-09-04 13:02:31');
 
 -- --------------------------------------------------------
 
@@ -338,7 +342,7 @@ ALTER TABLE `sale_items`
 -- AUTO_INCREMENT untuk tabel `store_settings`
 --
 ALTER TABLE `store_settings`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT untuk tabel `suppliers`

@@ -8,17 +8,8 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use App\Models\StoreSettingModel;
 
-/**
- * Class BaseController
- *
- * BaseController provides a convenient place for loading components
- * and performing functions that are needed by all your controllers.
- * Extend this class in any new controllers:
- *     class Home extends BaseController
- *
- * For security be sure to declare any new methods as protected or private.
- */
 abstract class BaseController extends Controller
 {
     /**
@@ -29,30 +20,31 @@ abstract class BaseController extends Controller
     protected $request;
 
     /**
-     * An array of helpers to be loaded automatically upon
-     * class instantiation. These helpers will be available
-     * to all other controllers that extend BaseController.
+     * Helpers to be loaded automatically.
      *
      * @var list<string>
      */
     protected $helpers = ['url', 'form', 'pager'];
 
     /**
-     * Be sure to declare properties for any property fetch you initialized.
-     * The creation of dynamic property is deprecated in PHP 8.2.
+     * Properti untuk data pengaturan toko.
+     *
+     * @var array|null
      */
-    // protected $session;
+    protected $store_info;
 
-    /**
-     * @return void
-     */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         // Do Not Edit This Line
         parent::initController($request, $response, $logger);
 
-        // Preload any models, libraries, etc, here.
+        // Load data pengaturan toko dari database
+        $storeModel = new StoreSettingModel();
+        $this->store_info = $storeModel->first();
 
-        // E.g.: $this->session = service('session');
+        // Kirim data ini ke semua view sebagai variabel global
+        $this->renderer = service('renderer');
+        $this->renderer->setVar('store_info', $this->store_info);
+
     }
 }

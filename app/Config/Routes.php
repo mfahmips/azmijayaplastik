@@ -11,6 +11,7 @@ $routes->get('/', 'Home::index');
 $routes->group('dashboard', static function($routes) {
     // Utama
     $routes->get('/', 'Backend\Dashboard::index');
+    
     $routes->get('kasir', 'Backend\Kasir::index');
     $routes->post('kasir/tambahProdukBaru', 'Backend\Kasir::tambahProdukBaru');
     $routes->get('kasir/cariProduk', 'Backend\Kasir::cariProduk');

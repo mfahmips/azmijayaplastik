@@ -5,10 +5,9 @@
   <aside class="sidebar-wrapper" data-simplebar="true">
     <div class="sidebar-header">
       <div>
-        <img src="<?= base_url('assets/backend/images/logo-icon-2.png') ?>" class="logo-icon" alt="logo icon">
-      </div>
-      <div>
-        <h4 class="logo-text">Azmi Jaya</h4>
+        <h4 class="fw-semibold text-light" title="<?= esc($store_info['store_name']) ?>">
+      <?= esc($store_info['store_name']) ?>
+    </h4>
       </div>
     </div>
 
@@ -25,7 +24,7 @@
 
       <!-- Kasir -->
       <li>
-        <a href="<?= base_url('dashboard/sales/create') ?>">
+        <a href="<?= base_url('dashboard/kasir') ?>">
           <div class="parent-icon"><ion-icon name="cash-outline"></ion-icon></div>
           <div class="menu-title">Kasir</div>
         </a>
