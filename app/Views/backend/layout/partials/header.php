@@ -1,5 +1,5 @@
 <!--start top header-->
-<header class="top-header">
+<header class="top-header border-bottom">
   <nav class="navbar navbar-expand gap-3">
     <div class="toggle-icon">
       <ion-icon name="menu-outline"></ion-icon>
@@ -55,7 +55,6 @@
                 </div>
                 <div class="app-title">Tasks</div>
               </div>
-              <!-- ... lanjutkan isi lain bila perlu -->
             </div>
           </div>
         </li>
@@ -82,7 +81,6 @@
                   </div>
                 </div>
               </a>
-              <!-- ... tambahkan notifikasi lain jika perlu -->
             </div>
           </div>
         </li>

@@ -2,247 +2,335 @@
 <?= $this->section('content') ?>
 
 <div class="page-content">
-  <h4>Kasir</h4>
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label>Kasir</label>
+      <input type="text" class="form-control" value="Admin" readonly>
+    </div>
+    <div class="col-md-3">
+      <label>No. Invoice</label>
+      <input type="text" id="noInvoice" class="form-control" readonly>
+    </div>
+    <div class="col-md-3">
+      <label>Tanggal Invoice</label>
+      <input type="text" class="form-control" value="<?= date('d/m/Y') ?>" readonly>
+    </div>
+    <div class="col-md-3">
+      <label>Pelanggan</label>
+      <input type="text" id="namaPelanggan" class="form-control" placeholder="Nama pelanggan">
+    </div>
+  </div>
+
   <div class="row">
-    <div class="col-lg-8">
+    <!-- Form Tambah Produk -->
+    <div class="col-md-4">
       <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>Daftar Belanja</span>
-          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalProdukBaru">Tambah Produk Baru</button>
-        </div>
+        <div class="card-header">Tambah Produk Transaksi</div>
         <div class="card-body">
-          <input type="text" id="cariProduk" class="form-control mb-3" placeholder="Ketik nama / scan barcode...">
-          <table class="table table-sm table-dark table-bordered" id="tabelBelanja">
+          <div class="mb-2">
+            <label for="produkSelect">Cari Produk</label>
+            <select id="produkSelect" class="form-select">
+              <option value="">-- Pilih Produk --</option>
+              <?php foreach ($produk as $p): ?>
+                <?php if ($p['stock'] > 0): ?>
+                  <option value="<?= $p['id'] ?>"
+                          data-sku="<?= $p['sku'] ?>"
+                          data-name="<?= esc($p['name']) ?>"
+                          data-price="<?= $p['sell_price'] ?>">
+                    <?= esc($p['name']) ?> (Stok: <?= $p['stock'] ?>)
+                  </option>
+                <?php else: ?>
+                  <option disabled><?= esc($p['name']) ?> (Habis)</option>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <!-- hidden id + sku -->
+          <input type="hidden" id="produkId">
+          <input type="hidden" id="produkSku">
+
+          <div class="mb-2">
+            <label>Produk</label>
+            <input type="text" id="produkNama" class="form-control" readonly>
+          </div>
+          <div class="mb-2">
+            <label>Harga</label>
+            <input type="text" id="produkHarga" class="form-control" readonly>
+          </div>
+          <div class="mb-2">
+            <label>Jumlah</label>
+            <input type="number" id="produkJumlah" class="form-control" value="1" min="1">
+          </div>
+          <div class="mb-2">
+            <label>Total</label>
+            <input type="text" id="produkTotal" class="form-control" readonly>
+          </div>
+          <button class="btn btn-success w-100" id="btnTambah">Tambahkan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daftar Belanja -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">Daftar Produk Transaksi</div>
+        <div class="card-body">
+          <table class="table table-bordered" id="tabelBelanja">
             <thead>
               <tr>
-                <th>Produk</th>
-                <th>Qty</th>
+                <th>Kode Produk</th>
+                <th>Nama Produk</th>
                 <th>Harga</th>
-                <th>Subtotal</th>
-                <th></th>
+                <th>Jumlah</th>
+                <th>Total</th>
+                <th>Opsi</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
-        </div>
-      </div>
-    </div>
 
-    <div class="col-lg-4">
-      <div class="card">
-        <div class="card-header">Ringkasan</div>
-        <div class="card-body">
-          <p>Total Item: <span id="totalItems">0</span></p>
-          <p>Total Harga: Rp <span id="totalHarga">0</span></p>
-          <div class="mb-2">
-            <label for="pembayaran">Pembayaran</label>
-            <input type="number" id="pembayaran" class="form-control">
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <label>Sub Total Pembelian</label>
+              <input type="text" id="subTotal" class="form-control" readonly>
+            </div>
+            <div class="col-md-3">
+              <label>Diskon (%)</label>
+              <input type="number" id="diskon" class="form-control" value="0">
+            </div>
+            <div class="col-md-3">
+              <label>Total Pembelian</label>
+              <input type="text" id="grandTotal" class="form-control" readonly>
+            </div>
           </div>
-          <p>Kembalian: Rp <span id="kembalian">0</span></p>
-          <button class="btn btn-success w-100" id="btnSimpan">Simpan Transaksi</button>
+
+          <div class="mt-3">
+            <label>Pembayaran</label>
+            <input type="number" id="pembayaran" class="form-control mb-2">
+            <p>Kembalian: Rp <span id="kembalian">0</span></p>
+            <button class="btn btn-success w-100" id="btnSimpan">Simpan Transaksi</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Produk Baru -->
-<div class="modal fade" id="modalProdukBaru" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Produk Baru</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label>Nama Produk</label>
-          <input type="text" id="namaProdukBaru" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label>Harga Jual</label>
-          <input type="number" id="hargaProdukBaru" class="form-control">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" id="btnSimpanProdukBaru">Simpan</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- jQuery -->
+<script src="<?= base_url('assets/backend/js/jquery.min.js') ?>"></script>
 
 <script>
 let belanja = [];
 
-$(document).ready(function () {
-  // Select2 input produk (dengan input manual untuk produk baru)
-  $('#cariProduk').select2({
-    placeholder: 'Cari produk...',
-    allowClear: true,
-    tags: true,
-    createTag: function (params) {
-      let term = $.trim(params.term);
-      if (term === '') return null;
-      return {
-        id: 'new:' + term,
-        text: term,
-        isNew: true
-      };
-    },
-    ajax: {
-      url: '<?= base_url('kasir/cariProduk') ?>',
-      dataType: 'json',
-      delay: 250,
-      data: params => ({ q: params.term }),
-      processResults: data => ({
-        results: data.map(p => ({
-          id: p.id,
-          text: p.name,
-          price: parseFloat(p.sell_price || 0),
-          isNew: false
-        }))
-      }),
-      cache: true
-    },
-    escapeMarkup: markup => markup
-  }).on('select2:select', function (e) {
-    const p = e.params.data;
+function rupiah(n){ return (Number(n)||0).toLocaleString('id-ID'); }
+function toNumber(v){ return Number((v||'0').toString().replace(/\./g,''))||0; }
 
-    if (p.isNew) {
-      // Jika input manual, buka modal produk baru
-      $('#namaProdukBaru').val(p.text);
-      $('#modalProdukBaru').modal('show');
-    } else {
-      tambahProduk(p);
-    }
-
-    $(this).val(null).trigger('change');
-  });
-
-  // Event lainnya
-  $('#btnSimpan').on('click', simpanTransaksi);
-  $('#pembayaran').on('input', hitungKembalian);
-  $('#btnSimpanProdukBaru').on('click', simpanProdukBaru);
-});
-
-function tambahProduk(p) {
-  const idx = belanja.findIndex(i => i.id == p.id);
-  if (idx >= 0) {
-    belanja[idx].qty++;
-  } else {
-    belanja.push({ ...p, qty: 1 });
-  }
-  renderTabel();
-}
-
-function renderTabel() {
-  const tbody = $('#tabelBelanja tbody').empty();
-  let total = 0, items = 0;
-
-  belanja.forEach((item, i) => {
-    const subtotal = item.qty * item.price;
-    total += subtotal;
-    items += item.qty;
-
+function renderTabel(){
+  let tbody = $('#tabelBelanja tbody').empty();
+  let total = 0;
+  belanja.forEach((p,i)=>{
+    total += p.subtotal;
     tbody.append(`
       <tr>
-        <td>${item.text}</td>
-        <td>
-          <button class="btn btn-sm btn-secondary" onclick="ubahQty(${i}, -1)">-</button>
-          <span class="mx-2">${item.qty}</span>
-          <button class="btn btn-sm btn-secondary" onclick="ubahQty(${i}, 1)">+</button>
-        </td>
-        <td>Rp ${item.price.toLocaleString()}</td>
-        <td>Rp ${subtotal.toLocaleString()}</td>
-        <td><button class="btn btn-sm btn-danger" onclick="hapusItem(${i})">🗑</button></td>
+        <td>${p.sku}</td>
+        <td>${p.name}</td>
+        <td>Rp ${rupiah(p.price)}</td>
+        <td>${p.qty}</td>
+        <td>Rp ${rupiah(p.subtotal)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="hapusItem(${i})">Hapus</button></td>
       </tr>
     `);
   });
+  $('#subTotal').val(total);
+  hitungGrandTotal();
+}
 
-  $('#totalItems').text(items);
-  $('#totalHarga').text(`Rp ${total.toLocaleString()}`);
+function hapusItem(i){
+  belanja.splice(i,1);
+  renderTabel();
+}
+
+function hitungGrandTotal(){
+  const sub = toNumber($('#subTotal').val());
+  const diskon = toNumber($('#diskon').val());
+  const grand = sub - (sub * diskon / 100);
+  $('#grandTotal').val(grand);
   hitungKembalian();
 }
 
-function ubahQty(index, delta) {
-  belanja[index].qty += delta;
-  if (belanja[index].qty <= 0) belanja.splice(index, 1);
+function hitungKembalian(){
+  const grand = toNumber($('#grandTotal').val());
+  const bayar = toNumber($('#pembayaran').val());
+  $('#kembalian').text(rupiah(bayar-grand));
+}
+
+$(document).ready(function(){
+
+  // pilih produk → isi form
+  $('#produkSelect').on('change', function(){
+    let opt = $(this).find(':selected');
+    if(!opt.val()) return;
+    $('#produkId').val(opt.val());
+    $('#produkSku').val(opt.data('sku'));
+    $('#produkNama').val(opt.data('name'));
+    $('#produkHarga').val(opt.data('price'));
+    $('#produkJumlah').val(1);
+    $('#produkTotal').val(opt.data('price'));
+  });
+
+  // jumlah diubah → total update
+  $('#produkJumlah').on('input', function(){
+    let harga = toNumber($('#produkHarga').val());
+    let qty = toNumber($(this).val());
+    $('#produkTotal').val(harga*qty);
+  });
+
+  // tombol tambahkan
+  $('#btnTambah').on('click', function(){
+  const id = $('#produkId').val();
+  const sku = $('#produkSku').val();
+  const name = $('#produkNama').val();
+  const price = toNumber($('#produkHarga').val());
+  const qty = Math.max(1, toNumber($('#produkJumlah').val()));
+
+  // langsung skip tanpa alert kalau belum ada produk
+  if (!id || !name || price <= 0) return;
+
+  const subtotal = qty * price;
+
+  belanja.push({ id, kode: sku||'-', name, price, qty, subtotal });
+
+  // reset form setelah masuk
+  $('#produkId,#produkSku,#produkNama,#produkHarga,#produkJumlah,#produkTotal').val('');
+  $('#produkSelect').val('').trigger('change');
+
   renderTabel();
-}
+});
 
-function hapusItem(index) {
-  belanja.splice(index, 1);
-  renderTabel();
-}
 
-function hitungKembalian() {
-  const total = belanja.reduce((acc, i) => acc + i.qty * i.price, 0);
-  const bayar = parseInt($('#pembayaran').val() || 0);
-  const kembali = bayar - total;
-  $('#kembalian').text(`Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`);
-}
+  // kalkulasi realtime
+  $('#diskon').on('input',hitungGrandTotal);
+  $('#pembayaran').on('input',hitungKembalian);
 
-function simpanTransaksi() {
-  const total = belanja.reduce((acc, i) => acc + i.qty * i.price, 0);
-  const bayar = parseInt($('#pembayaran').val() || 0);
+  // simpan transaksi
+  $('#btnSimpan').on('click', function(){
+    if(!belanja.length) return alert('Belanja kosong!');
+    const total = toNumber($('#grandTotal').val());
+    const bayar = toNumber($('#pembayaran').val());
+    if(bayar < total) return alert('Pembayaran kurang');
 
-  if (!belanja.length) return alert('Daftar belanja kosong!');
-  if (bayar < total) return alert('Pembayaran kurang dari total.');
-
-  const items = belanja.map(p => ({
-    id: p.id,
-    price: p.price,
-    qty: p.qty,
-    subtotal: p.qty * p.price
-  }));
-
-  fetch('<?= base_url('kasir/simpanTransaksi') ?>', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items, total_price: total, payment: bayar })
-  })
-    .then(res => res.json())
-    .then(res => {
-      if (res.status === 'ok') {
-        alert('Transaksi berhasil! Invoice: ' + res.invoice);
+    fetch('<?= base_url('dashboard/kasir/simpanTransaksi') ?>',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        items: belanja,
+        total_price: total,
+        payment: bayar,
+        customer_name: $('#namaPelanggan').val().trim()||null,
+        invoice_hint: $('#noInvoice').val()||null
+      })
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status==='ok'){
+        alert('Transaksi berhasil! Invoice: '+res.invoice);
+        window.open('<?= base_url('dashboard/kasir/cetak') ?>/'+res.invoice,'_blank');
         location.reload();
       } else {
-        alert('Gagal simpan: ' + res.message);
+        alert('Gagal: '+res.message);
       }
     });
-}
+  });
+});
 
-function simpanProdukBaru() {
-  const name = $('#namaProdukBaru').val().trim();
-  const price = parseInt($('#hargaProdukBaru').val()) || 0;
+$(document).ready(function(){
 
-  if (!name || price <= 0) {
-    alert('Isi nama dan harga produk.');
-    return;
-  }
-
-  fetch('<?= base_url('kasir/tambahProdukBaru') ?>', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ name, sell_price: price })
-  })
-    .then(res => res.json())
+  // Panggil nomor invoice dari backend
+  fetch('<?= base_url('dashboard/kasir/nextInvoice') ?>')
+    .then(r => r.json())
     .then(res => {
-      if (res.status === 'ok') {
-        alert('Produk berhasil ditambahkan.');
-        tambahProduk({
-          id: res.produk.id,
-          text: res.produk.name,
-          price: parseFloat(res.produk.sell_price)
-        });
-        $('#modalProdukBaru').modal('hide');
-        $('#namaProdukBaru').val('');
-        $('#hargaProdukBaru').val('');
+      if(res.status === 'ok'){
+        $('#noInvoice').val(res.invoice);
       } else {
-        alert(res.message);
+        // fallback kalau gagal
+        let today = new Date();
+        let dd = String(today.getDate()).padStart(2,'0');
+        let mm = String(today.getMonth()+1).padStart(2,'0');
+        let yyyy = today.getFullYear();
+        $('#noInvoice').val('INV-'+dd+mm+yyyy+'-0001');
       }
     });
-}
+
+  // === existing code ===
+  $('#produkSelect').on('change', function(){
+    let opt = $(this).find(':selected');
+    if(!opt.val()) return;
+    $('#produkId').val(opt.val());
+    $('#produkSku').val(opt.data('sku'));
+    $('#produkNama').val(opt.data('name'));
+    $('#produkHarga').val(opt.data('price'));
+    $('#produkJumlah').val(1);
+    $('#produkTotal').val(opt.data('price'));
+  });
+
+  $('#produkJumlah').on('input', function(){
+    let harga = toNumber($('#produkHarga').val());
+    let qty = toNumber($(this).val());
+    $('#produkTotal').val(harga*qty);
+  });
+
+  $('#btnTambah').on('click', function(){
+    let id = $('#produkId').val();
+    let sku = $('#produkSku').val();
+    let name = $('#produkNama').val();
+    let price = toNumber($('#produkHarga').val());
+    let qty = toNumber($('#produkJumlah').val());
+
+    // langsung skip tanpa alert kalau belum ada produk
+  if (!id || !name || price <= 0) return;
+
+    let subtotal = price*qty;
+    belanja.push({id, sku, name, price, qty, subtotal});
+    renderTabel();
+
+    $('#produkId,#produkSku,#produkNama,#produkHarga,#produkJumlah,#produkTotal').val('');
+    $('#produkSelect').val('').trigger('change');
+  });
+
+  $('#diskon').on('input',hitungGrandTotal);
+  $('#pembayaran').on('input',hitungKembalian);
+
+  $('#btnSimpan').on('click', function(){
+    if(!belanja.length) return alert('Belanja kosong!');
+    const total = toNumber($('#grandTotal').val());
+    const bayar = toNumber($('#pembayaran').val());
+    if(bayar < total) return alert('Pembayaran kurang');
+
+    fetch('<?= base_url('dashboard/kasir/simpanTransaksi') ?>',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        items: belanja,
+        total_price: total,
+        payment: bayar,
+        customer_name: $('#namaPelanggan').val().trim()||null,
+        invoice_hint: $('#noInvoice').val()||null
+      })
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.status==='ok'){
+        alert('Transaksi berhasil! Invoice: '+res.invoice);
+        window.open('<?= base_url('dashboard/kasir/cetak') ?>/'+res.invoice,'_blank');
+        location.reload();
+      } else {
+        alert('Gagal: '+res.message);
+      }
+    });
+  });
+
+});
 
 </script>
 

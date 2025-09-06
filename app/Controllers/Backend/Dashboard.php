@@ -6,21 +6,24 @@ use App\Controllers\BaseController;
 use App\Models\SaleModel;
 use App\Models\ProductModel;
 use App\Models\CategoryModel;
-use App\Models\SupplierModel;
+use App\Models\StockInModel;
 
 class Dashboard extends BaseController
 {
     public function index()
     {
-        $saleModel      = new SaleModel();
-        $productModel   = new ProductModel();
-        $categoryModel  = new CategoryModel();
-        $supplierModel  = new SupplierModel();
+        $saleModel     = new SaleModel();
+        $productModel  = new ProductModel();
+        $categoryModel = new CategoryModel();
+        $stockInModel  = new StockInModel();
 
         $today = date('Y-m-d');
 
         // Penjualan Hari Ini
-        $salesToday = $saleModel->where('DATE(created_at)', $today)->selectSum('paid')->first()['paid'] ?? 0;
+        $salesToday = $saleModel
+            ->where('DATE(created_at)', $today)
+            ->selectSum('paid')
+            ->first()['paid'] ?? 0;
 
         // Jumlah Transaksi Hari Ini
         $ordersToday = $saleModel->where('DATE(created_at)', $today)->countAllResults();
@@ -32,15 +35,29 @@ class Dashboard extends BaseController
         // Produk aktif
         $activeProducts = $productModel->where('is_active', 1)->countAllResults();
 
-        // Total kategori & supplier
-        $totalKategori = $categoryModel->countAllResults();
-        $totalSupplier = $supplierModel->countAllResults();
-
         // Produk hampir habis
         $lowStocks = $productModel
             ->where('is_active', 1)
             ->where('stock < min_stock')
             ->findAll();
+
+        // 🔹 Total Pengeluaran Bulan Ini (transaksi keluar)
+        $expensesAmount = $stockInModel
+            ->selectSum('(qty * cost_price)', 'total')
+            ->where('MONTH(created_at)', date('m'))
+            ->where('YEAR(created_at)', date('Y'))
+            ->first()['total'] ?? 0;
+
+        // 🔹 Chart Pengeluaran 12 bulan (periode tahun berjalan)
+        $chart_spark5 = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthExpense = $stockInModel
+                ->selectSum('(qty * cost_price)', 'total')
+                ->where('MONTH(created_at)', $m)
+                ->where('YEAR(created_at)', date('Y'))
+                ->first()['total'] ?? 0;
+            $chart_spark5[] = (float)$monthExpense;
+        }
 
         // Ringkasan statistik untuk dashboard
         $summary = [
@@ -51,9 +68,8 @@ class Dashboard extends BaseController
             'transactions_amount' => $transactionsAmount,
             'trx_growth'          => 0,
             'active_products'     => $activeProducts,
-            'total_kategori'      => $totalKategori,
-            'total_supplier'      => $totalSupplier,
-            'low_stock_count'     => count($lowStocks),
+            'low_stock_count'     => count($lowStocks), // ✅ ganti kategori → stok hampir habis
+            'expenses_amount'     => $expensesAmount,   // ✅ transaksi keluar
         ];
 
         // Aktivitas dummy
@@ -75,7 +91,10 @@ class Dashboard extends BaseController
             $label = date('D', strtotime($date));
             $days[] = $label;
 
-            $daySales = $saleModel->where('DATE(created_at)', $date)->selectSum('paid')->first()['paid'] ?? 0;
+            $daySales = $saleModel
+                ->where('DATE(created_at)', $date)
+                ->selectSum('paid')
+                ->first()['paid'] ?? 0;
             $data[] = (float)$daySales;
         }
         $chart_sales = [
@@ -83,7 +102,7 @@ class Dashboard extends BaseController
             'data'   => $data
         ];
 
-        // Chart Kategori (dummy data)
+        // Chart Kategori (dummy data sementara, bisa diganti real)
         $chart_categories = [
             'data' => [
                 'Plastik'   => 120,
@@ -93,12 +112,12 @@ class Dashboard extends BaseController
             ]
         ];
 
-        // Sparkline dummy data untuk statistik mini
+        // Sparkline dummy data (produk aktif, stok habis, penjualan, dll)
         $chart_spark1 = [10, 15, 8, 12, 16];
-        $chart_spark2 = [20, 22, 18, 25, 30];
-        $chart_spark3 = [5, 7, 6, 8, 10];
-        $chart_spark4 = [3, 5, 4, 6, 7];
-
+        $chart_spark2 = [5, 3, 6, 4, 7];   // stok akan habis
+        $chart_spark3 = [3, 5, 4, 6, 7];   // penjualan
+        $chart_spark4 = [7, 8, 6, 9, 10];  // transaksi
+        // $chart_spark5 diisi pengeluaran per bulan
 
         return view('backend/index', [
             'title'            => 'Dashboard - Azmi Jaya Plastik',
@@ -113,7 +132,7 @@ class Dashboard extends BaseController
             'chart_spark2' => $chart_spark2,
             'chart_spark3' => $chart_spark3,
             'chart_spark4' => $chart_spark4,
+            'chart_spark5' => $chart_spark5,
         ]);
-
     }
 }

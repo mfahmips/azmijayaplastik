@@ -16,34 +16,68 @@ class Kasir extends BaseController
     public function __construct()
     {
         $this->productModel = new ProductModel();
-        $this->saleModel = new SaleModel();
+        $this->saleModel    = new SaleModel();
         $this->saleItemModel = new SaleItemModel();
     }
 
     public function index()
+{
+    $produk = $this->productModel->where('is_active',1)->findAll();
+    return view('backend/kasir/index', compact('produk'));
+}
+
+
+    /**
+     * Endpoint untuk generate invoice baru (INV-ddmmyyyy-0001)
+     */
+    public function nextInvoice()
     {
-        return view('backend/kasir/index');
+        $today = date('Y-m-d');
+        $tanggal = date('dmY'); // contoh: 06092025
+
+        $db = \Config\Database::connect();
+        $count = $db->table('sales')
+            ->where('DATE(created_at)', $today)
+            ->countAllResults();
+
+        $urut = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        $invoice = "INV-{$tanggal}-{$urut}";
+
+        return $this->response->setJSON([
+            'status'  => 'ok',
+            'invoice' => $invoice,
+        ]);
     }
 
+    /**
+     * Cari produk untuk autocomplete (nama, sku, atau barcode)
+     */
 public function cariProduk()
 {
     $keyword = $this->request->getGet('q');
 
+    if (!$keyword) {
+        return $this->response->setJSON([]);
+    }
+
     $produk = $this->productModel
-        ->select('id, name, sell_price')
+        ->select('id, sku, name, sell_price, stock') // ambil field penting
+        ->where('is_active', 1)
         ->groupStart()
             ->like('name', $keyword)
             ->orLike('sku', $keyword)
             ->orLike('barcode', $keyword)
         ->groupEnd()
         ->limit(10)
-        ->find();
+        ->findAll(); // ⚠️ pakai findAll() bukan find()
 
     return $this->response->setJSON($produk);
 }
 
 
-
+    /**
+     * Tambah produk baru via modal
+     */
     public function tambahProdukBaru()
     {
         $name = $this->request->getPost('name');
@@ -69,89 +103,106 @@ public function cariProduk()
         return $this->response->setJSON(['status' => 'ok', 'produk' => $produk]);
     }
 
+    /**
+     * Simpan transaksi kasir
+     */
     public function simpanTransaksi()
-{
-    $data = $this->request->getJSON(true);
+    {
+        $data = $this->request->getJSON(true);
 
-    if (!isset($data['items']) || !is_array($data['items']) || empty($data['items'])) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Item kosong']);
-    }
+        if (!isset($data['items']) || !is_array($data['items']) || empty($data['items'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Item kosong']);
+        }
 
-    $db = \Config\Database::connect();
-    $db->transStart();
+        $db = \Config\Database::connect();
+        $db->transStart();
 
-    // Generate invoice: INV-YYYYMMDD-XXXX
-    $tanggal = date('Ymd');
-    $jumlahHariIni = $db->table('sales')
-        ->where('DATE(created_at)', date('Y-m-d'))
-        ->countAllResults();
-    $invoice = 'INV-' . $tanggal . '-' . str_pad($jumlahHariIni + 1, 4, '0', STR_PAD_LEFT);
+        // Gunakan invoice dari client jika ada, jika tidak generate baru
+        $invoice = $data['invoice_hint'] ?? null;
+        if (!$invoice) {
+            $today = date('Y-m-d');
+            $tanggal = date('dmY');
+            $count = $db->table('sales')
+                ->where('DATE(created_at)', $today)
+                ->countAllResults();
+            $urut = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $invoice = "INV-{$tanggal}-{$urut}";
+        }
 
-    $saleData = [
-        'invoice'      => $invoice,
-        'total_price'  => $data['total_price'],
-        'total_items'  => count($data['items']),
-        'customer_id'  => null,
-        'paid'         => $data['payment'], // FIXED: sebelumnya tidak tersimpan
-        'change'       => $data['payment'] - $data['total_price'],
-        'created_at'   => date('Y-m-d H:i:s'),
-    ];
-
-    $this->saleModel->insert($saleData);
-    $saleId = $this->saleModel->getInsertID();
-
-    foreach ($data['items'] as $item) {
-        $insertItem = [
-            'sale_id'    => $saleId,
-            'product_id' => $item['id'],
-            'price'      => $item['price'],
-            'qty'        => $item['qty'],
-            'subtotal'   => $item['subtotal'],
+        $saleData = [
+            'invoice'      => $invoice,
+            'total_price'  => $data['total_price'],
+            'total_items'  => count($data['items']),
+            'customer_id'  => null,
+            'paid'         => $data['payment'],
+            'change'       => $data['payment'] - $data['total_price'],
+            'created_at'   => date('Y-m-d H:i:s'),
         ];
 
-        if (!$this->saleItemModel->insert($insertItem)) {
-            log_message('error', 'Gagal insert sale item: ' . json_encode($this->saleItemModel->errors()));
+        if (!empty($data['customer_name'])) {
+            $saleData['customer_name'] = $data['customer_name'];
         }
 
-        // Update stok produk
-        $produk = $this->productModel->find($item['id']);
-        if ($produk) {
-            $newStock = (int)$produk['stock'] - (int)$item['qty'];
-            $this->productModel->update($item['id'], ['stock' => $newStock]);
+        $this->saleModel->insert($saleData);
+        $saleId = $this->saleModel->getInsertID();
+
+        foreach ($data['items'] as $item) {
+            $insertItem = [
+                'sale_id'    => $saleId,
+                'product_id' => $item['id'],
+                'price'      => $item['price'],
+                'qty'        => $item['qty'],
+                'subtotal'   => $item['subtotal'],
+            ];
+
+            $this->saleItemModel->insert($insertItem);
+
+            // Update stok produk
+            $produk = $this->productModel->find($item['id']);
+            if ($produk) {
+                $newStock = (int)$produk['stock'] - (int)$item['qty'];
+                $this->productModel->update($item['id'], ['stock' => $newStock]);
+            }
         }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan transaksi.']);
+        }
+
+        return $this->response->setJSON(['status' => 'ok', 'invoice' => $invoice]);
     }
 
-    $db->transComplete();
-
-    if ($db->transStatus() === false) {
-        log_message('error', 'Transaksi gagal, rollback.');
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan transaksi.']);
+    /**
+     * Halaman riwayat penjualan
+     */
+    public function penjualan()
+    {
+        return view('backend/transaksi/penjualan/index');
     }
 
-    return $this->response->setJSON(['status' => 'ok', 'invoice' => $invoice]);
-}
-
-
-public function penjualan()
+    /**
+     * Cetak struk penjualan
+     */
+    public function cetak($invoice)
 {
-    return view('backend/transaksi/penjualan/index');
+    $sale = $this->saleModel->getSaleByInvoice($invoice);
+    if (!$sale) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException("Invoice {$invoice} tidak ditemukan");
+    }
+
+    return view('backend/kasir/print', [
+        'sale' => $sale,
+        'items' => $sale['items']
+    ]);
 }
 
 public function penjualanData()
 {
-    $model = new \App\Models\SaleModel();
-    $sales = $model->orderBy('created_at', 'DESC')->findAll();
-
+    $sales = $this->saleModel->getAllSalesWithSummary(100); // ambil max 100 transaksi terakhir
     return $this->response->setJSON($sales);
 }
-
-public function cetak($invoice)
-{
-    $sale = $this->saleModel->where('invoice', $invoice)->first();
-    $items = $this->saleItemModel->where('sale_id', $sale['id'])->findAll();
-    return view('backend/kasir/print', compact('sale', 'items'));
-}
-
 
 
 }

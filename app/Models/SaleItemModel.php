@@ -6,10 +6,24 @@ use CodeIgniter\Model;
 
 class SaleItemModel extends Model
 {
-    protected $table = 'sale_items';
-    protected $primaryKey = 'id';
+    protected $table            = 'sale_items';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+
     protected $allowedFields = [
-        'sale_id', 'product_id', 'price', 'qty', 'subtotal'
+        'sale_id',
+        'product_id',
+        'price',
+        'qty',
+        'subtotal',
+        'created_at',
+        'updated_at'
     ];
-    protected $useTimestamps = false;
+
+    // aktifkan timestamp otomatis
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
 }

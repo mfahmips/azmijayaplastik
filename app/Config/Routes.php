@@ -12,12 +12,15 @@ $routes->group('dashboard', static function($routes) {
     // Utama
     $routes->get('/', 'Backend\Dashboard::index');
     
+       // Kasir
     $routes->get('kasir', 'Backend\Kasir::index');
-    $routes->post('kasir/tambahProdukBaru', 'Backend\Kasir::tambahProdukBaru');
     $routes->get('kasir/cariProduk', 'Backend\Kasir::cariProduk');
+    $routes->post('kasir/tambahProdukBaru', 'Backend\Kasir::tambahProdukBaru');
     $routes->post('kasir/simpanTransaksi', 'Backend\Kasir::simpanTransaksi');
-    $routes->get('penjualan', 'Backend\Kasir::penjualan');
-    $routes->get('penjualan/data', 'Backend\Kasir::penjualanData');
+    $routes->get('kasir/penjualan', 'Backend\Kasir::penjualan');
+    $routes->get('kasir/penjualanData', 'Backend\Kasir::penjualanData');
+    $routes->get('kasir/cetak/(:segment)', 'Backend\Kasir::cetak/$1');
+    $routes->get('kasir/nextInvoice', 'Backend\Kasir::nextInvoice');
 
 
 
@@ -26,11 +29,17 @@ $routes->group('dashboard', static function($routes) {
     $routes->get('products', 'Backend\Products::index');
     $routes->get('products/create', 'Backend\Products::create');
     $routes->post('products', 'Backend\Products::store');
-    $routes->get('products/(:num)/edit', 'Backend\Products::edit/$1');
-    $routes->post('products/(:num)/update', 'Backend\Products::update/$1');
-    $routes->post('products/(:num)/delete', 'Backend\Products::delete/$1');
+    $routes->get('products/edit/(:num)', 'Backend\Products::edit/$1');
+    $routes->post('products/update/(:num)', 'Backend\Products::update/$1');
+    $routes->post('products/delete/(:num)', 'Backend\Products::delete/$1');
     $routes->get ('products/export', 'Backend\Products::export');
     $routes->post('products/import', 'Backend\Products::import');
+
+
+    $routes->get('products/stock-in', 'Backend\Products::stockIn');
+    $routes->post('products/stock-in/save', 'Backend\Products::stockInSave');
+
+
 
     // Kategori
     $routes->get('categories', 'Backend\Categories::index');

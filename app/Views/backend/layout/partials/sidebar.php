@@ -34,11 +34,27 @@
       <li class="menu-label">Master Data</li>
 
       <li>
-        <a href="<?= base_url('dashboard/products') ?>">
-          <div class="parent-icon"><ion-icon name="cube-outline"></ion-icon></div>
-          <div class="menu-title">Produk</div>
-        </a>
-      </li>
+          <a href="javascript:;" class="has-arrow">
+            <div class="parent-icon">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="menu-title">Produk</div>
+          </a>
+          <ul>
+            <li> <a href="<?= base_url('dashboard/products') ?>">
+                <ion-icon name="ellipse-outline"></ion-icon>Data
+              </a>
+            </li>
+            <li> <a href="<?= base_url('dashboard/products/stock-in') ?>">
+                <ion-icon name="ellipse-outline"></ion-icon>Stok Masuk
+              </a>
+            </li>
+            <li> <a href="<?= base_url('dashboard/products/stock-out') ?>">
+                <ion-icon name="ellipse-outline"></ion-icon>Stok Keluar
+              </a>
+            </li>
+          </ul>
+        </li>
       <li>
         <a href="<?= base_url('dashboard/categories') ?>">
           <div class="parent-icon"><ion-icon name="albums-outline"></ion-icon></div>
@@ -49,6 +65,23 @@
         <a href="<?= base_url('dashboard/suppliers') ?>">
           <div class="parent-icon"><ion-icon name="business-outline"></ion-icon></div>
           <div class="menu-title">Supplier</div>
+        </a>
+      </li>
+
+      <!-- Pengaturan -->
+      <li class="menu-label">Transaksi</li>
+
+      <li>
+        <a href="<?= base_url('#') ?>">
+          <div class="parent-icon"><ion-icon name="storefront-outline"></ion-icon></div>
+          <div class="menu-title">Transaksi Masuk</div>
+        </a>
+      </li>
+
+      <li>
+        <a href="<?= base_url('#') ?>">
+          <div class="parent-icon"><ion-icon name="help-circle-outline"></ion-icon></div>
+          <div class="menu-title">Transaksi Keluar</div>
         </a>
       </li>
 
