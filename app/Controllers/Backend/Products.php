@@ -134,31 +134,51 @@ class Products extends BaseController
         exit;
     }
 
-    public function import()
-    {
-        $file = $this->request->getFile('file_excel');
-        if ($file && $file->isValid()) {
-            $sheet = IOFactory::load($file->getTempName())->getActiveSheet()->toArray();
+public function import()
+{
+    $file = $this->request->getFile('file_excel');
+    if ($file && $file->isValid()) {
+        $sheet = IOFactory::load($file->getTempName())->getActiveSheet()->toArray();
 
-            for ($i = 1; $i < count($sheet); $i++) {
-                $row = $sheet[$i];
-                $this->product->save([
-                    'sku'          => $row[0],
-                    'name'         => $row[1],
-                    'category_id'  => $row[2],
-                    'supplier_id'  => $row[3],
-                    'cost_price'   => $row[4],
-                    'sell_price'   => $row[5],
-                    'stock'        => $row[6],
-                    'description'  => $row[7],
+        for ($i = 1; $i < count($sheet); $i++) {
+            $row = $sheet[$i];
+            $sku = trim($row[0]);
+
+            // ✅ Cek apakah SKU sudah ada
+            $existing = $this->product->where('sku', $sku)->first();
+
+            if ($existing) {
+                // 👉 Kalau SKU sudah ada, update data
+                $this->product->update($existing['id'], [
+                    'name'        => $row[1],
+                    'category_id' => $row[2],
+                    'supplier_id' => $row[3],
+                    'cost_price'  => $row[4],
+                    'sell_price'  => $row[5],
+                    'stock'       => $row[6],
+                    'description' => $row[7],
+                ]);
+            } else {
+                // 👉 Kalau SKU belum ada, insert baru
+                $this->product->insert([
+                    'sku'         => $sku ?: 'SKU' . time(),
+                    'name'        => $row[1],
+                    'category_id' => $row[2],
+                    'supplier_id' => $row[3],
+                    'cost_price'  => $row[4],
+                    'sell_price'  => $row[5],
+                    'stock'       => $row[6],
+                    'description' => $row[7],
                 ]);
             }
-
-            return redirect()->to(base_url('dashboard/products'))->with('success', 'Import berhasil!');
         }
 
-        return redirect()->back()->with('error', 'File tidak valid.');
+        return redirect()->to(base_url('dashboard/products'))->with('success', 'Import berhasil!');
     }
+
+    return redirect()->back()->with('error', 'File tidak valid.');
+}
+
 
     // ================= Barang Masuk =================
     public function stockIn()
@@ -231,6 +251,12 @@ class Products extends BaseController
 
     return redirect()->to(base_url('dashboard/products/stock-in'))->with('success', 'Barang masuk berhasil ditambahkan.');
 }
+
+private function generateSku()
+{
+    return 'SKU' . date('YmdHis') . rand(100, 999);
+}
+
 
 
 

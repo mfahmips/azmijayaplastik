@@ -22,6 +22,18 @@ $routes->group('dashboard', static function($routes) {
     $routes->get('kasir/cetak/(:segment)', 'Backend\Kasir::cetak/$1');
     $routes->get('kasir/nextInvoice', 'Backend\Kasir::nextInvoice');
 
+    $routes->get('cashflow', 'Backend\Cashflow::index');
+
+    $routes->get('transaksi', 'Backend\Transaksi::index');                     // Halaman utama
+    $routes->post('transaksi/save', 'Backend\Transaksi::save');                 // Simpan transaksi baru
+    $routes->get('transaksi/create', 'Backend\Transaksi::create');      // Form tambah (kalau dipakai terpisah)
+    $routes->post('transaksi/store', 'Backend\Transaksi::store');       // Simpan data baru
+    $routes->get('transaksi/edit/(:num)', 'Backend\Transaksi::edit/$1');        // Edit transaksi
+    $routes->post('transaksi/update/(:num)', 'Backend\Transaksi::update/$1');   // Update transaksi
+    $routes->get('transaksi/delete/(:num)', 'Backend\Transaksi::delete/$1');    // Hapus transaksi
+
+
+
 
 
 
