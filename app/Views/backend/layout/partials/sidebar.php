@@ -3,12 +3,26 @@
 
   <!--start sidebar -->
   <aside class="sidebar-wrapper" data-simplebar="true">
-    <div class="sidebar-header">
-      <div>
-        <h4 class="fw-semibold text-light" title="<?= esc($store_info['store_name']) ?>">
-          <?= esc($store_info['store_name']) ?>
-        </h4>
-      </div>
+    <div class="sidebar-header d-flex align-items-center">
+      <!-- Logo saat sidebar collapse -->
+      <a href="<?= base_url('dashboard') ?>" class="logo-icon">
+        <?php if (!empty($store_info['store_logo'])): ?>
+          <img src="<?= base_url($store_info['store_logo']) ?>"
+           alt="Logo"
+           style="height:35px;">
+        <?php else: ?>
+          <img src="<?= base_url('assets/images/default-logo.png') ?>"
+               alt="Logo"
+               class="img-fluid"
+               style="height:35px;">
+        <?php endif; ?>
+      </a>
+
+      <!-- Nama Toko saat sidebar expand -->
+      <span class="logo-text fw-semibold text-light ms-2" 
+            title="<?= esc($store_info['store_name']) ?>">
+        <?= esc($store_info['store_name']) ?>
+      </span>
     </div>
 
     <!--navigation-->
@@ -51,8 +65,8 @@
             </a>
           </li>
           <li>
-            <a href="<?= base_url('dashboard/products/stock-out') ?>">
-              <ion-icon name="ellipse-outline"></ion-icon>Stok Keluar
+            <a href="<?= base_url('dashboard/products/stock-opname') ?>">
+              <ion-icon name="ellipse-outline"></ion-icon>Stok Opname
             </a>
           </li>
         </ul>
@@ -104,16 +118,43 @@
         </a>
       </li>
 
-      <!-- Support -->
-      <li>
-        <a href="<?= base_url('dashboard/support') ?>">
-          <div class="parent-icon"><ion-icon name="help-circle-outline"></ion-icon></div>
-          <div class="menu-title">Support</div>
-        </a>
-      </li>
-
     </ul>
     <!--end navigation-->
 
   </aside>
   <!--end sidebar-->
+
+<style>
+  .sidebar-header img,
+  .logo-icon img {
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Atur ukuran logo sidebar */
+.sidebar-logo {
+  height: 40px;       /* lebih besar dari sebelumnya */
+  width: auto;        /* biar proporsional */
+  object-fit: contain;
+}
+
+/* Supaya teks sejajar dengan logo */
+.sidebar-header {
+  gap: 10px;          /* jarak antara logo dan teks */
+}
+
+/* Atur teks logo di sidebar */
+.logo-text {
+  font-size: 6px;          /* cukup mungil, masih terbaca */
+  font-weight: 500;
+  line-height: 1;
+  max-width: 50px;         /* batasi lebar maksimal */
+  overflow: hidden;
+  text-overflow: ellipsis; /* pakai "..." jika terlalu panjang */
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+
+</style>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Waktu pembuatan: 06 Sep 2025 pada 19.02
+-- Waktu pembuatan: 13 Sep 2025 pada 16.28
 -- Versi server: 8.0.30
 -- Versi PHP: 8.1.10
 
@@ -31,112 +31,70 @@ CREATE TABLE `categories` (
   `id` bigint UNSIGNED NOT NULL,
   `code` varchar(50) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `description` text,
+  `type` enum('category','sub','product') DEFAULT 'category',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` datetime DEFAULT NULL,
-  `updated_at` datetime DEFAULT NULL,
-  `deleted_at` datetime DEFAULT NULL
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data untuk tabel `categories`
 --
 
-INSERT INTO `categories` (`id`, `code`, `name`, `description`, `is_active`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(2, 'PLK-HDPE', 'HDPE', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(3, 'PLK-PE', 'PE', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(4, 'PLK-PETP', 'PE TIPIS', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(5, 'PLK-PETB', 'PE TEBAL', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(6, 'PLK-PP', 'PP', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(7, 'PLK-ATP', 'ATP', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(8, 'PLK-OPP', 'OPP', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(9, 'PLK-KLIP', 'STP & KLIP', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(10, 'PLK-SAMPAH', 'HD SAMPAH', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(11, 'PKG-BNT', 'KOTAK BENTO', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(12, 'PKG-DMS', 'DUS MAKAN & SNACK', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(13, 'PKG-PBLB', 'PAPER BOWL & LUNCH BOX', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(14, 'PKG-CPK', 'CUP PLASTIK & KERTAS', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(15, 'PKG-SDT', 'SEDOTAN', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(16, 'PKG-MK', 'MIKA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(17, 'PKG-AKU', 'ALAS KUE', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(18, 'PKG-LAL', 'LOYANG ALUMUNIUM', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(19, 'PKG-CAG', 'CETAKAN AGAR', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(20, 'PKG-TLR', 'TALI RAPIA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(21, 'PKG-ISO', 'ISOLASI', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(22, 'PKG-KRM', 'KERTAS MINYAK', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(23, 'PKG-KRK', 'KERTAS KADO', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(24, 'PKG-STY', 'STYROFOAM', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(25, 'PKG-BBW', 'BUBBLE WRAP', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(26, 'PKG-GBPB', 'GOODIE BAG & PAPER BAG', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(27, 'BHK-TGU', 'TEPUNG TERIGU', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(28, 'BHK-TMZ', 'TEPUNG MEIZENA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(29, 'BHK-TPK', 'TEPUNG TAPIOKA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(30, 'BHK-TBS', 'TEPUNG BERAS', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(31, 'BHK-TKT', 'TEPUNG KETAN', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(32, 'BHK-TRI', 'TEPUNG ROTI', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(33, 'BHK-GPR', 'GULA PASIR', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(34, 'BHK-GHS', 'GULA HALUS', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(35, 'BHK-GPM', 'GULA PALM', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(36, 'BHK-GMH', 'GULA MERAH', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(37, 'BHK-CBT', 'COKELAT BATANG', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(38, 'BHK-CBK', 'COKELAT BUBUK', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(39, 'BHK-MTG', 'MENTEGA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(40, 'BHK-SBK', 'SUSU BUBUK', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(41, 'BHK-SKMK', 'SUSU KENTAL MANIS & KRIMER', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(42, 'BHK-SFC', 'SUSU FULL CREAM', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(43, 'BHK-WCR', 'WHIPPING CREAM', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(44, 'BHK-BPSK', 'BAKING POWDER & SODA KUE', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(45, 'BHK-RIN', 'RAGI INSTAN', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(46, 'BHK-STO', 'SP, TBM, OVALET', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(47, 'BHK-PMP', 'PEWARNA MAKANAN & PASTA', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(48, 'BHK-ESM', 'ESSENSE MAKANAN', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(49, 'BHK-SEL', 'SELAI', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(50, 'BHK-GZD', 'GLAZE DONAT', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(51, 'BHK-KEJ', 'KEJU', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(52, 'BHK-SMKC', 'SPRINGKEL, MESES, KISMIS, & CHOCO', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(53, 'BHK-BJG', 'BIJI JAGUNG', NULL, 1, '2025-08-24 02:38:17', '2025-08-24 02:38:17', NULL),
-(54, 'SKU1757168944', 'ATP 12 X 25', '7', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(55, 'SKU1757169042', 'ATP 15 X 30', '7', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(56, 'SKU1757169151', 'ATP 20 X 35', '7', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(57, 'SKU1757169173', 'ATP 20 X 20', '7', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(58, 'SKU1757169535', 'PT 10', '4', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(59, 'SKU1757169564', 'PT 12', '4', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(60, 'SKU1757169592', 'PT 15', '4', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(61, 'SKU1757169750', 'KLIP 4 X 6', '9', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(62, 'SKU1757169793', 'KLIP 5 X 8', '9', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(63, 'SKU1757169837', 'KLIP 10 X 15', '9', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(64, 'SKU1757170179', 'HD SAMPAH 60 X 100', '10', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(65, 'SKU1757170199', 'HD SAMPAH 90 X 120', '10', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(66, 'SKU1757170287', 'HD 1 CUP WARNA', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(67, 'SKU1757170377', 'HD HITAM 35', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(68, 'SKU1757170413', 'HD HITAM 40', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(69, 'SKU1757170453', 'HD HITAM 50', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(70, 'SKU1757170492', 'HD MERAH 28', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(71, 'SKU1757170514', 'HD MERAH 35', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(72, 'SKU1757170543', 'HD MERAH 40', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(73, 'SKU1757170648', 'HD MERAH 50', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(74, 'SKU1757170821', 'HD PUTIH 28', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(75, 'SKU1757170839', 'HD PUTIH 35', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(76, 'SKU1757170852', 'HD PUTIH 40', '2', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(77, 'SKU1757171010', 'PE 10 X 20', '3', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(78, 'SKU1757171039', 'PE 12 X 25', '3', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(79, 'SKU1757171055', 'PE 15 X 30', '3', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(80, 'SKU1757171372', 'FOAM BESAR POLOS', '24', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(81, 'SKU1757171534', 'FOAM HB BURGER', '24', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(82, 'SKU1757171705', 'CUP AQUA', '14', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(83, 'SKU1757171831', 'CUP 16 OZ', '14', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(84, 'SKU1757171852', 'CUP 14 OZ', '14', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(85, 'SKU1757171872', 'CUP 12 OZ', '14', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(86, 'SKU1757171948', 'MIKA 3A', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(87, 'SKU1757171986', 'MIKA 4A', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(88, 'SKU1757172026', 'MIKA 7C', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(89, 'SKU1757172095', 'MIKA 2A', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(90, 'SKU1757172124', 'MIKA 1A', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(91, 'SKU1757172176', 'MIKA JUMBO', '16', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(92, 'SKU1757172270', 'KN 100', '22', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(93, 'SKU1757172450', 'KN 250', '22', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(94, 'SKU1757172585', 'KN BUNGA 24 - B', '22', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL),
-(95, 'SKU1757172641', 'KN BUNGA 28 - B', '22', 1, '2025-09-06 17:46:30', '2025-09-06 17:46:30', NULL);
+INSERT INTO `categories` (`id`, `code`, `name`, `type`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'PLK-HDPE', 'HDPE', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(2, 'PLK-PE', 'PE', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(3, 'PLK-PT', 'PE TIPIS', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(4, 'PLK-PTB', 'PE TEBAL', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(5, 'PLK-PP', 'PP', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(6, 'PLK-ATP', 'ATP', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(7, 'PLK-OPP', 'OPP', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(8, 'PLK-KLIP', 'KLIP', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(9, 'PLK-STP', 'STANDING POUCH', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(10, 'PLK-HDS', 'HD SAMPAH', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(11, 'PKG-BNT', 'KOTAK BENTO', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(12, 'PKG-DMS', 'DUS MAKAN & SNACK', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(13, 'PKG-PBLB', 'PAPER BOWL & LUNCH BOX', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(14, 'PKG-CPK', 'CUP PLASTIK & KERTAS', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(15, 'PKG-SDT', 'SEDOTAN', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(16, 'PKG-MK', 'MIKA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(17, 'PKG-AKU', 'ALAS KUE', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(18, 'PKG-LAL', 'LOYANG ALUMUNIUM', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(19, 'PKG-CAG', 'CETAKAN AGAR', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(20, 'PKG-TLR', 'TALI RAPIA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(21, 'PKG-ISO', 'ISOLASI', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(22, 'PKG-KRM', 'KERTAS MINYAK', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(23, 'PKG-KRK', 'KERTAS KADO', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(24, 'PKG-STY', 'STYROFOAM', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(25, 'PKG-BBW', 'BUBBLE WRAP', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(26, 'PKG-GBPB', 'GOODIE BAG & PAPER BAG', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(27, 'BHK-TGU', 'TEPUNG TERIGU', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(28, 'BHK-TMZ', 'TEPUNG MEIZENA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(29, 'BHK-TPK', 'TEPUNG TAPIOKA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(30, 'BHK-TBS', 'TEPUNG BERAS', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(31, 'BHK-TKT', 'TEPUNG KETAN', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(32, 'BHK-TRI', 'TEPUNG ROTI', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(33, 'BHK-GPR', 'GULA PASIR', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(34, 'BHK-GHS', 'GULA HALUS', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(35, 'BHK-GPM', 'GULA PALM', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(36, 'BHK-GMH', 'GULA MERAH', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(37, 'BHK-CBT', 'COKELAT BATANG', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(38, 'BHK-CBK', 'COKELAT BUBUK', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(39, 'BHK-MTG', 'MENTEGA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(40, 'BHK-SBK', 'SUSU BUBUK', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(41, 'BHK-SKMK', 'SUSU KENTAL MANIS & KRIMER', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(42, 'BHK-SFC', 'SUSU FULL CREAM', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(43, 'BHK-WCR', 'WHIPPING CREAM', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(44, 'BHK-BPSK', 'BAKING POWDER & SODA KUE', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(45, 'BHK-RIN', 'RAGI INSTAN', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(46, 'BHK-STO', 'SP, TBM, OVALET', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(47, 'BHK-PMP', 'PEWARNA MAKANAN & PASTA', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(48, 'BHK-ESM', 'ESSENSE MAKANAN', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(49, 'BHK-SEL', 'SELAI', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(50, 'BHK-GZD', 'GLAZE DONAT', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(51, 'BHK-KEJ', 'KEJU', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(52, 'BHK-SMKC', 'SPRINGKEL, MESES, KISMIS, & CHOCO', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43'),
+(53, 'BHK-BJG', 'BIJI JAGUNG', 'category', 1, '2025-09-13 11:20:43', '2025-09-13 11:20:43');
 
 -- --------------------------------------------------------
 
@@ -167,6 +125,7 @@ CREATE TABLE `products` (
   `id` bigint UNSIGNED NOT NULL,
   `sku` varchar(50) DEFAULT NULL,
   `name` varchar(150) NOT NULL,
+  `brand` varchar(100) DEFAULT NULL,
   `category_id` bigint UNSIGNED DEFAULT NULL,
   `supplier_id` bigint UNSIGNED DEFAULT NULL,
   `barcode` varchar(100) DEFAULT NULL,
@@ -178,57 +137,56 @@ CREATE TABLE `products` (
   `is_active` tinyint(1) DEFAULT '1',
   `description` text,
   `created_at` datetime DEFAULT NULL,
-  `updated_at` datetime DEFAULT NULL,
-  `deleted_at` datetime DEFAULT NULL
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data untuk tabel `products`
 --
 
-INSERT INTO `products` (`id`, `sku`, `name`, `category_id`, `supplier_id`, `barcode`, `unit`, `cost_price`, `sell_price`, `stock`, `min_stock`, `is_active`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(6, 'SKU1757168944', 'ATP 12 X 25', 7, NULL, NULL, 'pcs', 0.00, 0.00, 8, 0, 1, NULL, NULL, NULL, NULL),
-(7, 'SKU1757169042', 'ATP 15 X 30', 7, NULL, NULL, 'pcs', 0.00, 0.00, 8, 0, 1, NULL, NULL, NULL, NULL),
-(8, 'SKU1757169151', 'ATP 20 X 35', 7, NULL, NULL, 'pcs', 0.00, 0.00, 8, 0, 1, NULL, NULL, NULL, NULL),
-(9, 'SKU1757169173', 'ATP 20 X 20', 7, NULL, NULL, 'pcs', 0.00, 0.00, 8, 0, 1, NULL, NULL, NULL, NULL),
-(10, 'SKU1757169535', 'PT 10', 4, NULL, NULL, 'pcs', 0.00, 0.00, 25, 0, 1, NULL, NULL, NULL, NULL),
-(11, 'SKU1757169564', 'PT 12', 4, NULL, NULL, 'pcs', 0.00, 0.00, 25, 0, 1, NULL, NULL, NULL, NULL),
-(12, 'SKU1757169592', 'PT 15', 4, NULL, NULL, 'pcs', 0.00, 0.00, 25, 0, 1, NULL, NULL, NULL, NULL),
-(13, 'SKU1757169750', 'KLIP 4 X 6', 9, NULL, NULL, 'pcs', 0.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(14, 'SKU1757169793', 'KLIP 5 X 8', 9, NULL, NULL, 'pcs', 0.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(15, 'SKU1757169837', 'KLIP 10 X 15', 9, NULL, NULL, 'pcs', 0.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(16, 'SKU1757170179', 'HD SAMPAH 60 X 100', 10, NULL, NULL, 'pcs', 4250.00, 0.00, 50, 0, 1, NULL, NULL, NULL, NULL),
-(17, 'SKU1757170199', 'HD SAMPAH 90 X 120', 10, NULL, NULL, 'pcs', 4250.00, 0.00, 50, 0, 1, NULL, NULL, NULL, NULL),
-(18, 'SKU1757170287', 'HD 1 CUP WARNA', 2, NULL, NULL, 'pcs', 3000.00, 0.00, 25, 0, 1, NULL, NULL, NULL, NULL),
-(19, 'SKU1757170377', 'HD HITAM 35', 2, NULL, NULL, 'pcs', 12800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(20, 'SKU1757170413', 'HD HITAM 40', 2, NULL, NULL, 'pcs', 17200.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(21, 'SKU1757170453', 'HD HITAM 50', 2, NULL, NULL, 'pcs', 17500.00, 0.00, 4, 0, 1, NULL, NULL, NULL, NULL),
-(22, 'SKU1757170492', 'HD MERAH 28', 2, NULL, NULL, 'pcs', 12000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(23, 'SKU1757170514', 'HD MERAH 35', 2, NULL, NULL, 'pcs', 14800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(24, 'SKU1757170543', 'HD MERAH 40', 2, NULL, NULL, 'pcs', 14800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(25, 'SKU1757170648', 'HD MERAH 50', 2, NULL, NULL, 'pcs', 29000.00, 0.00, 3, 0, 1, NULL, NULL, NULL, NULL),
-(26, 'SKU1757170821', 'HD PUTIH 28', 2, NULL, NULL, 'pcs', 14800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(27, 'SKU1757170839', 'HD PUTIH 35', 2, NULL, NULL, 'pcs', 14800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(28, 'SKU1757170852', 'HD PUTIH 40', 2, NULL, NULL, 'pcs', 14800.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(29, 'SKU1757171010', 'PE 10 X 20', 3, NULL, NULL, 'pcs', 6000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(30, 'SKU1757171039', 'PE 12 X 25', 3, NULL, NULL, 'pcs', 6000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(31, 'SKU1757171055', 'PE 15 X 30', 3, NULL, NULL, 'pcs', 6000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(32, 'SKU1757171372', 'FOAM BESAR POLOS', 24, NULL, NULL, 'pcs', 335.00, 0.00, 500, 0, 1, NULL, NULL, NULL, NULL),
-(33, 'SKU1757171534', 'FOAM HB BURGER', 24, NULL, NULL, 'pcs', 148.00, 0.00, 500, 0, 1, NULL, NULL, NULL, NULL),
-(34, 'SKU1757171705', 'CUP AQUA', 14, NULL, NULL, 'pcs', 4750.00, 0.00, 40, 0, 1, NULL, NULL, NULL, NULL),
-(35, 'SKU1757171831', 'CUP 16 OZ', 14, NULL, NULL, 'pcs', 7500.00, 0.00, 20, 0, 1, NULL, NULL, NULL, NULL),
-(36, 'SKU1757171852', 'CUP 14 OZ', 14, NULL, NULL, 'pcs', 7500.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(37, 'SKU1757171872', 'CUP 12 OZ', 14, NULL, NULL, 'pcs', 7500.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(38, 'SKU1757171948', 'MIKA 3A', 16, NULL, NULL, 'pcs', 10000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(39, 'SKU1757171986', 'MIKA 4A', 16, NULL, NULL, 'pcs', 7000.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(40, 'SKU1757172026', 'MIKA 7C', 16, NULL, NULL, 'pcs', 2500.00, 0.00, 10, 0, 1, NULL, NULL, NULL, NULL),
-(41, 'SKU1757172095', 'MIKA 2A', 16, NULL, NULL, 'pcs', 560.00, 0.00, 50, 0, 1, NULL, NULL, NULL, NULL),
-(42, 'SKU1757172124', 'MIKA 1A', 16, NULL, NULL, 'pcs', 950.00, 0.00, 50, 0, 1, NULL, NULL, NULL, NULL),
-(43, 'SKU1757172176', 'MIKA JUMBO', 16, NULL, NULL, 'pcs', 1440.00, 0.00, 50, 0, 1, NULL, NULL, NULL, NULL),
-(44, 'SKU1757172270', 'KN 100', 22, NULL, NULL, 'pcs', 14000.00, 0.00, 5, 0, 1, NULL, NULL, NULL, NULL),
-(45, 'SKU1757172450', 'KN 250', 22, NULL, NULL, 'pcs', 22800.00, 0.00, 5, 0, 1, NULL, NULL, NULL, NULL),
-(46, 'SKU1757172585', 'KN BUNGA 24 - B', 22, NULL, '', 'PAK', 16000.00, 0.00, 5, 0, 1, NULL, NULL, NULL, NULL),
-(47, 'SKU1757172641', 'KN BUNGA 28 - B', 22, NULL, '', 'PAK', 20000.00, 0.00, 5, 0, 1, NULL, NULL, NULL, NULL);
+INSERT INTO `products` (`id`, `sku`, `name`, `brand`, `category_id`, `supplier_id`, `barcode`, `unit`, `cost_price`, `sell_price`, `stock`, `min_stock`, `is_active`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'PE-PE4X-001-MIC', 'PE 4 X 23', 'Mico', 2, NULL, NULL, 'Bks', 0.00, 8000.00, 7, 0, 1, NULL, '2025-09-13 16:25:47', '2025-09-13 16:25:47'),
+(2, 'PE-PE4,-001-BAW', 'PE 4,5 X 23', 'Bawang', 2, NULL, NULL, 'Bks', 0.00, 8000.00, 0, 0, 1, NULL, '2025-09-13 16:25:47', '2025-09-13 16:25:47'),
+(3, 'PE-PE6X-001-MIC', 'PE 6 X 20', 'Mico', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 8, 0, 1, NULL, '2025-09-13 16:25:47', '2025-09-13 16:25:47'),
+(4, 'PE-PE7X-001-MIC', 'PE 7 X 20', 'Mico', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 10, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(5, 'PE-PE8X-001-MIC', 'PE 8 X 20', 'Mico', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 6, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(6, 'PE-PE9X-001-BAW', 'PE 9 X 20', 'Bawang', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 1, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(7, 'PE-PE10-001-BAW', 'PE 10 X 20', 'Bawang', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 9, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(8, 'PE-PE10-001-MIC', 'PE 10 X 25', 'Mico', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 23, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(9, 'PE-PE12-001-BAW', 'PE 12 X 25', 'Bawang', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 10, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(10, 'PE-PE12-001-MIC', 'PE 12 X 25', 'Mico', 2, NULL, NULL, 'Bks', 6000.00, 8000.00, 6, 0, 1, NULL, '2025-09-13 16:25:48', '2025-09-13 16:25:48');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `product_prices`
+--
+
+CREATE TABLE `product_prices` (
+  `id` bigint UNSIGNED NOT NULL,
+  `product_id` bigint UNSIGNED NOT NULL,
+  `unit` varchar(50) NOT NULL,
+  `min_qty` int DEFAULT '1',
+  `price` decimal(12,2) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data untuk tabel `product_prices`
+--
+
+INSERT INTO `product_prices` (`id`, `product_id`, `unit`, `min_qty`, `price`, `created_at`, `updated_at`) VALUES
+(359, 1, 'Kg', 5, 35000.00, '2025-09-13 16:25:47', '2025-09-13 16:25:47'),
+(360, 2, 'Kg', 5, 35000.00, '2025-09-13 16:25:47', '2025-09-13 16:25:47'),
+(361, 3, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(362, 4, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(363, 5, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(364, 6, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(365, 7, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(366, 8, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(367, 9, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48'),
+(368, 10, 'Kg', 5, 35000.00, '2025-09-13 16:25:48', '2025-09-13 16:25:48');
 
 -- --------------------------------------------------------
 
@@ -248,6 +206,14 @@ CREATE TABLE `sales` (
   `created_at` datetime NOT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data untuk tabel `sales`
+--
+
+INSERT INTO `sales` (`id`, `invoice`, `customer_id`, `customer_name`, `total_price`, `total_items`, `paid`, `change`, `created_at`, `updated_at`) VALUES
+(3, 'INV-07092025-0001', NULL, NULL, 15000.00, 1, 20000.00, 5000.00, '2025-09-07 06:16:06', '2025-09-07 06:16:06'),
+(4, 'INV-09092025-0001', NULL, NULL, 1500.00, 1, 2000.00, 500.00, '2025-09-09 02:48:56', '2025-09-09 02:48:56');
 
 -- --------------------------------------------------------
 
@@ -279,56 +245,25 @@ CREATE TABLE `stock_in` (
   `qty` int NOT NULL,
   `note` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `cost_price` decimal(15,2) NOT NULL DEFAULT '0.00'
+  `cost_price` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data untuk tabel `stock_in`
+-- Struktur dari tabel `stock_opnames`
 --
 
-INSERT INTO `stock_in` (`id`, `product_id`, `supplier_id`, `qty`, `note`, `created_at`, `cost_price`) VALUES
-(1, 6, NULL, 8, '', '2025-09-06 14:29:04', 7125.00),
-(2, 7, NULL, 8, '', '2025-09-06 14:30:42', 7125.00),
-(3, 8, NULL, 8, '', '2025-09-06 14:32:31', 7125.00),
-(4, 9, NULL, 8, '', '2025-09-06 14:32:53', 7125.00),
-(5, 10, NULL, 25, '', '2025-09-06 14:38:55', 1600.00),
-(6, 11, NULL, 25, '', '2025-09-06 14:39:24', 2200.00),
-(7, 12, NULL, 25, '', '2025-09-06 14:39:52', 2600.00),
-(8, 13, NULL, 10, '', '2025-09-06 14:42:30', 1500.00),
-(9, 14, NULL, 10, '', '2025-09-06 14:43:13', 2200.00),
-(10, 15, NULL, 10, '', '2025-09-06 14:43:57', 7400.00),
-(11, 16, NULL, 50, '', '2025-09-06 14:49:39', 4250.00),
-(12, 17, NULL, 50, '', '2025-09-06 14:49:59', 4250.00),
-(13, 18, NULL, 25, '', '2025-09-06 14:51:27', 3000.00),
-(14, 19, NULL, 10, '', '2025-09-06 14:52:57', 12800.00),
-(15, 20, NULL, 10, '', '2025-09-06 14:53:33', 17200.00),
-(16, 21, NULL, 4, '', '2025-09-06 14:54:13', 17500.00),
-(17, 22, NULL, 10, '', '2025-09-06 14:54:52', 12000.00),
-(18, 23, NULL, 10, '', '2025-09-06 14:55:14', 14800.00),
-(19, 24, NULL, 10, '', '2025-09-06 14:55:43', 14800.00),
-(20, 25, NULL, 3, '', '2025-09-06 14:57:28', 29000.00),
-(21, 26, NULL, 10, '', '2025-09-06 15:00:21', 14800.00),
-(22, 27, NULL, 10, '', '2025-09-06 15:00:39', 14800.00),
-(23, 28, NULL, 10, '', '2025-09-06 15:00:52', 14800.00),
-(24, 29, NULL, 10, '', '2025-09-06 15:03:30', 6000.00),
-(25, 30, NULL, 10, '', '2025-09-06 15:03:59', 6000.00),
-(26, 31, NULL, 10, '', '2025-09-06 15:04:15', 6000.00),
-(27, 32, NULL, 500, '', '2025-09-06 15:09:32', 335.00),
-(28, 33, NULL, 500, '', '2025-09-06 15:12:14', 148.00),
-(29, 34, NULL, 40, '', '2025-09-06 15:15:05', 4750.00),
-(30, 35, NULL, 20, '', '2025-09-06 15:17:11', 7500.00),
-(31, 36, NULL, 10, '', '2025-09-06 15:17:32', 7500.00),
-(32, 37, NULL, 10, '', '2025-09-06 15:17:52', 7500.00),
-(33, 38, NULL, 10, '', '2025-09-06 15:19:08', 10000.00),
-(34, 39, NULL, 10, '', '2025-09-06 15:19:46', 7000.00),
-(35, 40, NULL, 10, '', '2025-09-06 15:20:26', 2500.00),
-(36, 41, NULL, 50, '', '2025-09-06 15:21:35', 560.00),
-(37, 42, NULL, 50, '', '2025-09-06 15:22:04', 950.00),
-(38, 43, NULL, 50, '', '2025-09-06 15:22:56', 1440.00),
-(39, 44, NULL, 10, '', '2025-09-06 15:24:30', 7000.00),
-(40, 45, NULL, 5, '', '2025-09-06 15:27:30', 22800.00),
-(41, 46, NULL, 5, '', '2025-09-06 15:29:45', 16000.00),
-(42, 47, NULL, 5, '', '2025-09-06 15:30:41', 20000.00);
+CREATE TABLE `stock_opnames` (
+  `id` bigint UNSIGNED NOT NULL,
+  `product_id` bigint UNSIGNED NOT NULL,
+  `stock_system` int NOT NULL,
+  `stock_real` int NOT NULL,
+  `difference` int NOT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -358,7 +293,7 @@ CREATE TABLE `store_settings` (
 --
 
 INSERT INTO `store_settings` (`id`, `store_name`, `store_owner`, `store_category`, `store_address`, `store_logo`, `store_description`, `store_phone`, `store_facebook`, `store_instagram`, `store_tiktok`, `store_website`, `created_at`, `updated_at`) VALUES
-(1, 'Azmi Jaya Plastik', 'Muhamad Fahmi Purnama Sidiq', 'Toko Plastik dan Bahan Kue', 'Jalan Jembatan Hitam No. 1 RT. 03/10 Desa Cijujung Kec. Sukaraja Kab. Bogor', 'uploads/website/logo/1756990951_3eb4812f75684798e218.png', '', '08561331998', '', '', '', '', '2025-09-04 12:29:43', '2025-09-06 17:01:22');
+(1, 'Azmi Jaya Plastik', 'Muhamad Fahmi Purnama Sidiq', 'Toko Plastik dan Bahan Kue', 'Jalan Jembatan Hitam No. 1 RT. 03/10 Desa Cijujung Kec. Sukaraja Kab. Bogor', 'uploads/website/logo/1756990951_3eb4812f75684798e218.png', '', '08561331998', '', 'azmijayaplastik', '', 'www.azmijayaplastik.com', '2025-09-04 12:29:43', '2025-09-07 13:41:20');
 
 -- --------------------------------------------------------
 
@@ -374,10 +309,12 @@ CREATE TABLE `suppliers` (
   `phone` varchar(50) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `address` text,
+  `payment_method` enum('cash','termin') DEFAULT 'cash',
+  `default_terms` int DEFAULT '0',
+  `bank_account` varchar(100) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` datetime DEFAULT NULL,
-  `updated_at` datetime DEFAULT NULL,
-  `deleted_at` datetime DEFAULT NULL
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -432,6 +369,13 @@ ALTER TABLE `products`
   ADD KEY `supplier_id` (`supplier_id`);
 
 --
+-- Indeks untuk tabel `product_prices`
+--
+ALTER TABLE `product_prices`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_product` (`product_id`);
+
+--
 -- Indeks untuk tabel `sales`
 --
 ALTER TABLE `sales`
@@ -455,6 +399,13 @@ ALTER TABLE `stock_in`
   ADD PRIMARY KEY (`id`),
   ADD KEY `product_id` (`product_id`),
   ADD KEY `supplier_id` (`supplier_id`);
+
+--
+-- Indeks untuk tabel `stock_opnames`
+--
+ALTER TABLE `stock_opnames`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `product_id` (`product_id`);
 
 --
 -- Indeks untuk tabel `store_settings`
@@ -483,7 +434,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT untuk tabel `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT untuk tabel `customers`
@@ -495,25 +446,37 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT untuk tabel `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT untuk tabel `product_prices`
+--
+ALTER TABLE `product_prices`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=369;
 
 --
 -- AUTO_INCREMENT untuk tabel `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT untuk tabel `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT untuk tabel `stock_in`
 --
 ALTER TABLE `stock_in`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+
+--
+-- AUTO_INCREMENT untuk tabel `stock_opnames`
+--
+ALTER TABLE `stock_opnames`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `store_settings`
@@ -541,8 +504,14 @@ ALTER TABLE `transactions`
 -- Ketidakleluasaan untuk tabel `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `product_prices`
+--
+ALTER TABLE `product_prices`
+  ADD CONSTRAINT `fk_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 --
 -- Ketidakleluasaan untuk tabel `sale_items`
@@ -556,7 +525,13 @@ ALTER TABLE `sale_items`
 --
 ALTER TABLE `stock_in`
   ADD CONSTRAINT `stock_in_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `stock_in_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `stock_in_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Ketidakleluasaan untuk tabel `stock_opnames`
+--
+ALTER TABLE `stock_opnames`
+  ADD CONSTRAINT `stock_opnames_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

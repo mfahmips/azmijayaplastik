@@ -3,36 +3,6 @@
 
 <div class="page-content">
 
-  <!--start breadcrumb-->
-  <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-    <div class="breadcrumb-title pe-3">Dashboard</div>
-    <div class="ps-3">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0 p-0 align-items-center">
-          <li class="breadcrumb-item">
-            <a href="<?= base_url('dashboard') ?>"><ion-icon name="home-outline"></ion-icon></a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">eCommerce</li>
-        </ol>
-      </nav>
-    </div>
-    <div class="ms-auto">
-      <div class="btn-group">
-        <button type="button" class="btn btn-outline-primary">Settings</button>
-        <button type="button" class="btn btn-outline-primary split-bg-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
-          <span class="visually-hidden">Toggle Dropdown</span>
-        </button>
-        <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg-end">
-          <a class="dropdown-item" href="#">Action</a>
-          <a class="dropdown-item" href="#">Another action</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">Separated link</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!--end breadcrumb-->
-
   <!-- Summary Cards -->
   <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-4 g-3">
 

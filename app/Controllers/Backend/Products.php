@@ -7,29 +7,34 @@ use App\Models\ProductModel;
 use App\Models\CategoryModel;
 use App\Models\SupplierModel;
 use App\Models\StockInModel;
+use App\Models\StockOpnameModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Products extends BaseController
 {
-    protected $product, $category, $supplier, $stockIn;
+    protected $product, $category, $supplier, $stockIn, $opname;
 
     public function __construct()
     {
+        setlocale(LC_TIME, 'id_ID.UTF-8', 'Indonesian_indonesia.1252');
         $this->product  = new ProductModel();
         $this->category = new CategoryModel();
         $this->supplier = new SupplierModel();
         $this->stockIn  = new StockInModel();
+        $this->opname   = new StockOpnameModel();
     }
 
+    // ================= Produk =================
     public function index()
     {
         $q           = trim($this->request->getGet('q') ?? '');
-        $perPage     = 8;
+        $perPage     = 12;
         $category_id = $this->request->getGet('category_id');
-        $builder     = $this->product->getJoined(); // method with join to category
+        $builder     = $this->product->getJoined();
 
+        // filter pencarian
         if ($q !== '') {
             $builder->groupStart()
                 ->like('products.name', $q)
@@ -38,103 +43,172 @@ class Products extends BaseController
                 ->groupEnd();
         }
 
+        // filter kategori
         if ($category_id) {
             $builder->where('products.category_id', $category_id);
         }
 
-        $products = $builder->orderBy('products.id', 'DESC')->paginate($perPage, 'prod');
-        $pager    = $this->product->pager;
-        $no       = 1 + ($pager->getCurrentPage('prod') - 1) * $perPage;
+        // urutkan berdasar kategori code + sku
+        $products = $builder
+            ->orderBy('category_code', 'ASC')
+            ->orderBy('products.sku', 'ASC')
+            ->paginate($perPage, 'prod');
 
-        $data = [
+        $pager = $this->product->pager;
+        $no    = 1 + ($pager->getCurrentPage('prod') - 1) * $perPage;
+
+        // kategori hanya yang punya produk
+        $categories = $this->category
+            ->select('c.id, c.name, c.code')
+            ->from('categories c')
+            ->join('products p', 'p.category_id = c.id', 'inner')
+            ->groupBy('c.id, c.name, c.code')
+            ->orderBy('c.name', 'ASC')
+            ->findAll();
+
+
+        return view('backend/master/products/index', [
             'title'       => 'Data Produk',
             'products'    => $products,
-            'categories'  => $this->category->findAll(),
+            'categories'  => $categories,
             'pager'       => $pager,
             'q'           => $q,
             'category_id' => $category_id,
             'per_page'    => $perPage,
             'no'          => $no
-        ];
-
-        return view('backend/master/products/index', $data);
+        ]);
     }
+
 
     public function create()
     {
-        $data = [
+        return view('backend/master/products/create', [
             'categories' => $this->category->findAll(),
             'suppliers'  => $this->supplier->findAll()
-        ];
-        return view('backend/master/products/create', $data);
+        ]);
     }
 
     public function store()
-    {
-        $this->product->save($this->request->getPost());
-        return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil ditambahkan.');
+{
+    $data = $this->request->getPost([
+        'name','brand','barcode','cost_price',
+        'sell_price','stock','min_stock','unit',
+        'category_id','supplier_id','is_active'
+    ]);
+
+    $data['sku'] = $this->generateSkuByCategory($data['category_id'], $data['name'], $data['brand']);
+
+    $this->product->insert($data);
+    $productId = $this->product->getInsertID();
+
+    // harga grosir
+    $prices = $this->request->getPost('prices');
+    if ($prices) {
+        foreach ($prices as $price) {
+            model('ProductPriceModel')->insert([
+                'product_id' => $productId,
+                'unit'       => $price['unit'],
+                'min_qty'    => $price['min_qty'],
+                'price'      => $price['price'],
+            ]);
+        }
     }
+
+    return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil ditambahkan.');
+}
+
 
     public function edit($id)
     {
-        $data = [
+        return view('backend/master/products/edit', [
             'product'    => $this->product->find($id),
+            'prices'     => model('ProductPriceModel')->where('product_id', $id)->findAll(),
             'categories' => $this->category->findAll(),
             'suppliers'  => $this->supplier->findAll()
-        ];
-        return view('backend/master/products/edit', $data);
+        ]);
     }
 
     public function update($id)
-    {
-        $this->product->update($id, $this->request->getPost());
-        return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil diupdate.');
-    }
+{
+    $data = $this->request->getPost([
+        'name','brand','barcode','cost_price',
+        'sell_price','stock','min_stock','unit',
+        'category_id','supplier_id','description','is_active'
+    ]);
+
+    // generate ulang SKU (supaya format konsisten)
+    $data['sku'] = $this->generateSkuByCategory($data['category_id'], $data['name'], $data['brand']);
+
+    $this->product->update($id, $data);
+
+    return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil diupdate.');
+}
+
 
     public function delete($id)
     {
         $this->product->delete($id);
+        model('ProductPriceModel')->where('product_id', $id)->delete();
         return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil dihapus.');
     }
 
+    // ================= Export / Import =================
     public function export()
-    {
-        $products = $this->product->findAll();
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+{
+    $products = $this->product->getJoined()->findAll(); 
+    $prices   = model('ProductPriceModel')
+                    ->select('product_prices.*, products.name as product_name')
+                    ->join('products', 'products.id = product_prices.product_id')
+                    ->orderBy('product_prices.product_id', 'ASC')
+                    ->findAll();
 
-        $sheet->setCellValue('A1', 'SKU');
-        $sheet->setCellValue('B1', 'Nama');
-        $sheet->setCellValue('C1', 'Kategori ID');
-        $sheet->setCellValue('D1', 'Supplier ID');
-        $sheet->setCellValue('E1', 'Harga Beli');
-        $sheet->setCellValue('F1', 'Harga Jual');
-        $sheet->setCellValue('G1', 'Stok');
-        $sheet->setCellValue('H1', 'Keterangan');
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Produk');
 
-        $row = 2;
-        foreach ($products as $p) {
+    // ✅ Tambah kolom SKU
+    $sheet->fromArray([[ 
+        'SKU','Nama','Merk','Kategori','Satuan',
+        'Harga Beli','Harga Jual','Stok',
+        'Unit Grosir','Minimal Qty','Harga Grosir'
+    ]], null, 'A1');
+
+    $row = 2;
+    foreach ($products as $p) {
+        $productPrices = array_filter($prices, fn($pr) => $pr['product_id'] == $p['id']);
+        if (!empty($productPrices)) {
+            foreach ($productPrices as $pr) {
+                $sheet->fromArray([
+                    $p['sku'], $p['name'], $p['brand'] ?? '', $p['category_name'] ?? '',
+                    $p['unit'], $p['cost_price'], $p['sell_price'], $p['stock'],
+                    $pr['unit'], $pr['min_qty'], $pr['price']
+                ], null, 'A'.$row);
+                $row++;
+            }
+        } else {
             $sheet->fromArray([
-                $p['sku'], $p['name'], $p['category_id'], $p['supplier_id'],
-                $p['cost_price'], $p['sell_price'], $p['stock'], $p['description']
-            ], null, 'A' . $row);
+                $p['sku'], $p['name'], $p['brand'] ?? '', $p['category_name'] ?? '',
+                $p['unit'], $p['cost_price'], $p['sell_price'], $p['stock'],
+                '-', '-', '-'
+            ], null, 'A'.$row);
             $row++;
         }
-
-        foreach (range('A', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $filename = 'Produk_' . date('Ymd_His') . '.xlsx';
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment;filename=\"$filename\"");
-        header('Cache-Control: max-age=0');
-
-        (new Xlsx($spreadsheet))->save('php://output');
-        exit;
     }
 
-public function import()
+    foreach (range('A', 'K') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    $filename = "AJP_Produk_".date('dmY').".xlsx";
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header("Content-Disposition: attachment;filename=\"$filename\"");
+    header('Cache-Control: max-age=0');
+    (new Xlsx($spreadsheet))->save('php://output');
+    exit;
+}
+
+
+    public function import()
 {
     $file = $this->request->getFile('file_excel');
     if ($file && $file->isValid()) {
@@ -142,121 +216,376 @@ public function import()
 
         for ($i = 1; $i < count($sheet); $i++) {
             $row = $sheet[$i];
-            $sku = trim($row[0]);
+            $sku        = trim($row[0] ?? ''); // ✅ SKU kolom pertama
+            $name       = trim($row[1] ?? '');
+            $brand      = trim($row[2] ?? '');
+            $category   = trim($row[3] ?? '');
+            $unit       = trim($row[4] ?? '');
+            $costPrice  = (float)($row[5] ?? 0);
+            $sellPrice  = (float)($row[6] ?? 0);
+            $stock      = (int)($row[7] ?? 0);
+            $grosirUnit = trim($row[8] ?? '');
+            $minQty     = (int)($row[9] ?? 0);
+            $grosirPrice= (float)($row[10] ?? 0);
 
-            // ✅ Cek apakah SKU sudah ada
-            $existing = $this->product->where('sku', $sku)->first();
+            // cari kategori
+            $categoryRow = $this->category->where('name', $category)->first();
+            $categoryId  = $categoryRow['id'] ?? null;
 
-            if ($existing) {
-                // 👉 Kalau SKU sudah ada, update data
-                $this->product->update($existing['id'], [
-                    'name'        => $row[1],
-                    'category_id' => $row[2],
-                    'supplier_id' => $row[3],
-                    'cost_price'  => $row[4],
-                    'sell_price'  => $row[5],
-                    'stock'       => $row[6],
-                    'description' => $row[7],
+            // generate SKU kalau kosong
+            if (empty($sku)) {
+                $sku = $this->generateSkuByCategory($categoryId, $name, $brand);
+            }
+
+            // cek apakah sudah ada (name+brand+category)
+            $exists = $this->product
+                ->where('name', $name)
+                ->where('brand', $brand)
+                ->where('category_id', $categoryId)
+                ->first();
+
+            if ($exists) {
+                // ✅ Update produk lama
+                $this->product->update($exists['id'], [
+                    'sku'         => $sku,
+                    'unit'        => $unit,
+                    'cost_price'  => $costPrice,
+                    'sell_price'  => $sellPrice,
+                    'stock'       => $stock,
+                    'is_active'   => 1
                 ]);
+                $productId = $exists['id'];
             } else {
-                // 👉 Kalau SKU belum ada, insert baru
+                // ✅ Tambah produk baru
                 $this->product->insert([
-                    'sku'         => $sku ?: 'SKU' . time(),
-                    'name'        => $row[1],
-                    'category_id' => $row[2],
-                    'supplier_id' => $row[3],
-                    'cost_price'  => $row[4],
-                    'sell_price'  => $row[5],
-                    'stock'       => $row[6],
-                    'description' => $row[7],
+                    'sku'         => $sku,
+                    'name'        => $name,
+                    'brand'       => $brand,
+                    'category_id' => $categoryId,
+                    'unit'        => $unit,
+                    'cost_price'  => $costPrice,
+                    'sell_price'  => $sellPrice,
+                    'stock'       => $stock,
+                    'is_active'   => 1
+                ]);
+                $productId = $this->product->getInsertID();
+            }
+
+            // harga grosir
+            if ($minQty > 0 && $grosirPrice > 0) {
+                model('ProductPriceModel')->insert([
+                    'product_id' => $productId,
+                    'unit'       => $grosirUnit,
+                    'min_qty'    => $minQty,
+                    'price'      => $grosirPrice
                 ]);
             }
         }
 
         return redirect()->to(base_url('dashboard/products'))->with('success', 'Import berhasil!');
     }
-
     return redirect()->back()->with('error', 'File tidak valid.');
 }
+
 
 
     // ================= Barang Masuk =================
     public function stockIn()
 {
+    $records = $this->stockIn
+        ->select('
+            stock_in.id, stock_in.product_id, stock_in.supplier_id,
+            stock_in.qty, stock_in.cost_price, stock_in.note, stock_in.created_at,
+            products.sku, products.name as product_name, products.unit,
+            categories.name as category_name,
+            suppliers.name as supplier_name
+        ')
+        ->join('products', 'products.id = stock_in.product_id')
+        ->join('categories', 'categories.id = products.category_id', 'left')
+        ->join('suppliers', 'suppliers.id = stock_in.supplier_id', 'left')
+        ->orderBy('stock_in.created_at', 'DESC')
+        ->findAll();
+
+    // ✅ Grouping berdasarkan tanggal (format Y-m-d)
+    $grouped = [];
+    foreach ($records as $row) {
+        $dateKey = date('Y-m-d', strtotime($row['created_at']));
+        $grouped[$dateKey][] = $row;
+    }
+
+    // ✅ Ambil hanya kategori yang punya produk aktif
+    $categories = $this->category
+        ->select('categories.id, categories.name, categories.code')
+        ->join('products', 'products.category_id = categories.id', 'inner')
+        ->where('products.is_active', 1)
+        ->groupBy('categories.id, categories.name, categories.code')
+        ->orderBy('categories.name', 'ASC')
+        ->findAll();
+
     $data = [
-        'title'      => 'Barang Masuk',
-        'products'   => $this->product->where('is_active', 1)->findAll(),
-        'suppliers'  => $this->supplier->findAll(),
-        'categories' => $this->category->findAll(), // ✅ tambahkan ini
-        'stock_in'   => $this->stockIn
-            ->select('stock_in.*, products.name as product_name, suppliers.name as supplier_name')
-            ->join('products', 'products.id = stock_in.product_id')
-            ->join('suppliers', 'suppliers.id = stock_in.supplier_id', 'left')
-            ->orderBy('stock_in.created_at', 'DESC')
-            ->findAll()
+        'title'       => 'Barang Masuk',
+        'products'    => $this->product->where('is_active', 1)->findAll(),
+        'suppliers'   => $this->supplier->findAll(),
+        'categories'  => $categories,
+        'stock_group' => $grouped
     ];
 
     return view('backend/master/products/stock-in', $data);
 }
 
 
-   public function stockInSave()
-{
-    $productId   = $this->request->getPost('product_id');
-    $newProduct  = $this->request->getPost('new_product');
-    $supplierId  = $this->request->getPost('supplier_id') ?: null;
-    $qty         = (int)$this->request->getPost('qty');
-    $costPrice   = (float)$this->request->getPost('cost_price');
-    $note        = $this->request->getPost('note');
+    public function stockInSave()
+    {
+        $productId  = $this->request->getPost('product_id');
+        $newProduct = $this->request->getPost('new_product');
+        $supplierId = $this->request->getPost('supplier_id') ?: null;
+        $qty        = (int)$this->request->getPost('qty');
+        $costPrice  = (float)$this->request->getPost('cost_price');
+        $note       = $this->request->getPost('note');
 
-    if ($qty <= 0) {
-        return redirect()->back()->with('error', 'Qty wajib diisi.');
-    }
+        if ($qty <= 0) {
+            return redirect()->back()->with('error', 'Qty wajib diisi.');
+        }
 
-    // ✅ Jika ada produk baru, buat dulu di tabel products
-    if ($newProduct) {
-        $this->product->insert([
-            'name'        => $newProduct,
-            'sku'         => 'SKU' . time(),
-            'category_id' => null,
+        // Jika produk baru dibuat
+        if ($newProduct) {
+            $this->product->insert([
+                'name'        => $newProduct,
+                'sku'         => $this->generateSkuByCategory(null), // tanpa kategori
+                'brand'       => null,
+                'category_id' => null,
+                'supplier_id' => $supplierId,
+                'stock'       => 0,
+                'cost_price'  => $costPrice,
+                'sell_price'  => 0,
+                'description' => null,
+                'is_active'   => 1
+            ]);
+            $productId = $this->product->getInsertID();
+        }
+
+        if (!$productId) {
+            return redirect()->back()->with('error', 'Pilih produk atau isi produk baru.');
+        }
+
+        // Simpan riwayat barang masuk
+        $this->stockIn->insert([
+            'product_id'  => $productId,
             'supplier_id' => $supplierId,
-            'stock'       => 0,
-            'cost_price'  => $costPrice, // langsung simpan harga beli awal
-            'sell_price'  => 0,
+            'qty'         => $qty,
+            'cost_price'  => $costPrice,
+            'note'        => $note,
+            'created_at'  => date('Y-m-d H:i:s'),
+            'updated_at'  => null
         ]);
-        $productId = $this->product->getInsertID();
+
+        // Update stok produk
+        $product   = $this->product->find($productId);
+        $newStock  = $product['stock'] + $qty;
+
+        $this->product->update($productId, [
+            'stock'      => $newStock,
+            'cost_price' => $costPrice
+        ]);
+
+        return redirect()->to(base_url('dashboard/products/stock-in'))
+                         ->with('success', 'Barang masuk berhasil ditambahkan.');
     }
 
-    if (!$productId) {
-        return redirect()->back()->with('error', 'Pilih produk atau isi produk baru.');
+    public function stockInEdit($id)
+    {
+        $stockIn = $this->stockIn->find($id);
+        if (!$stockIn) {
+            return redirect()->to(base_url('dashboard/products/stock-in'))
+                             ->with('error', 'Data tidak ditemukan.');
+        }
+
+        return view('backend/master/products/stock-in-edit', [
+            'title'     => 'Edit Barang Masuk',
+            'stock_in'  => $stockIn,
+            'products'  => $this->product->where('is_active', 1)->findAll(),
+            'suppliers' => $this->supplier->findAll(),
+        ]);
     }
 
-    // ✅ Insert ke tabel stock_in
-    $this->stockIn->insert([
-        'product_id'  => $productId,
-        'supplier_id' => $supplierId,
-        'qty'         => $qty,
-        'cost_price'  => $costPrice,
-        'note'        => $note,
-        'created_at'  => date('Y-m-d H:i:s')
-    ]);
+    public function stockInUpdate($id)
+    {
+        $stockIn = $this->stockIn->find($id);
+        if (!$stockIn) {
+            return redirect()->to(base_url('dashboard/products/stock-in'))
+                             ->with('error', 'Data tidak ditemukan.');
+        }
 
-    // ✅ Update stok + update harga beli produk
-    $product   = $this->product->find($productId);
-    $newStock  = $product['stock'] + $qty;
-    $this->product->update($productId, [
-        'stock'      => $newStock,
-        'cost_price' => $costPrice // harga beli terakhir dari stock in
-    ]);
+        $qty        = (int)$this->request->getPost('qty');
+        $costPrice  = (float)$this->request->getPost('cost_price');
+        $supplierId = $this->request->getPost('supplier_id') ?: null;
 
-    return redirect()->to(base_url('dashboard/products/stock-in'))->with('success', 'Barang masuk berhasil ditambahkan.');
-}
+        if ($qty <= 0) {
+            return redirect()->back()->with('error', 'Qty wajib lebih dari 0.');
+        }
 
-private function generateSku()
+        $this->stockIn->update($id, [
+            'product_id'  => $this->request->getPost('product_id'),
+            'supplier_id' => $supplierId,
+            'qty'         => $qty,
+            'cost_price'  => $costPrice,
+            'note'        => $this->request->getPost('note'),
+        ]);
+
+        return redirect()->to(base_url('dashboard/products/stock-in'))
+                         ->with('success', 'Barang masuk berhasil diupdate.');
+    }
+
+    public function stockInDelete($id)
+    {
+        $stockIn = $this->stockIn->find($id);
+        if (!$stockIn) {
+            return redirect()->to(base_url('dashboard/products/stock-in'))
+                             ->with('error', 'Data tidak ditemukan.');
+        }
+
+        $this->stockIn->delete($id);
+
+        return redirect()->to(base_url('dashboard/products/stock-in'))
+                         ->with('success', 'Barang masuk berhasil dihapus.');
+    }
+
+
+    // ================= Stok Opname =================
+    public function stokOpname()
+    {
+        $products = $this->product->orderBy('name','ASC')->findAll();
+
+        // ambil histori opname (paginate biar ringan)
+        $opnames = $this->opname->select('stock_opnames.*, products.name, products.sku')
+                                ->join('products','products.id=stock_opnames.product_id')
+                                ->orderBy('stock_opnames.created_at','DESC')
+                                ->paginate(10,'opname');
+
+        return view('backend/master/products/stock-opname',[
+            'title'    => 'Stok Opname',
+            'products' => $products,
+            'opnames'  => $opnames,
+            'pager'    => $this->opname->pager
+        ]);
+    }
+
+    public function simpanStokOpname()
+    {
+        $stocks = $this->request->getPost('stock') ?? [];
+        $notes  = $this->request->getPost('note') ?? [];
+
+        foreach ($stocks as $productId => $stockReal) {
+            $product = $this->product->find($productId);
+            if (!$product) continue;
+
+            $stockSystem = $product['stock'];
+            $difference  = (int)$stockReal - (int)$stockSystem;
+            $note        = $notes[$productId] ?? null;
+
+            // simpan histori opname
+            $this->opname->insert([
+                'product_id'   => $productId,
+                'stock_system' => $stockSystem,
+                'stock_real'   => $stockReal,
+                'difference'   => $difference,
+                'note'         => $note
+            ]);
+
+            // update stok produk sesuai hasil opname
+            $this->product->update($productId, ['stock' => $stockReal]);
+        }
+
+        return redirect()->to(base_url('dashboard/products/stock-opname'))
+                         ->with('success', 'Stok opname berhasil disimpan!');
+    }
+
+    public function editOpname($id)
+    {
+        $data = $this->opname->select('stock_opnames.*, products.name, products.sku')
+                             ->join('products','products.id=stock_opnames.product_id')
+                             ->where('stock_opnames.id',$id)
+                             ->first();
+        if (!$data) {
+            return redirect()->back()->with('error','Data tidak ditemukan');
+        }
+
+        return view('backend/master/products/edit-opname',[
+            'title'=>'Edit Stok Opname',
+            'opname'=>$data
+        ]);
+    }
+
+    public function updateOpname($id)
+    {
+        $data = $this->opname->find($id);
+        if (!$data) {
+            return redirect()->back()->with('error','Data tidak ditemukan');
+        }
+
+        $stockReal = (int)$this->request->getPost('stock_real');
+        $difference = $stockReal - (int)$data['stock_system'];
+
+        $this->opname->update($id,[
+            'stock_real' => $stockReal,
+            'difference' => $difference,
+            'note'       => $this->request->getPost('note')
+        ]);
+
+        return redirect()->to(base_url('dashboard/products/stock-opname'))
+                         ->with('success','Histori opname berhasil diupdate.');
+    }
+
+    public function deleteOpname($id)
+    {
+        $this->opname->delete($id);
+        return redirect()->to(base_url('dashboard/products/stock-opname'))
+                         ->with('success','Histori opname berhasil dihapus.');
+    }
+
+// ================= Utils =================
+private function generateSkuByCategory($categoryId, $name, $brand)
 {
-    return 'SKU' . date('YmdHis') . rand(100, 999);
-}
+    // kategori 3 huruf
+    $category = $this->category->find($categoryId);
+    $categoryCode = $category ? strtoupper(substr(preg_replace('/\s+/', '', $category['name']), 0, 3)) : 'CAT';
 
+    // nama produk max 4 huruf
+    $nameCode = strtoupper(substr(preg_replace('/\s+/', '', $name), 0, 4));
+
+    // brand max 3 huruf
+    $brandCode = $brand ? strtoupper(substr(preg_replace('/\s+/', '', $brand), 0, 3)) : 'XXX';
+
+    // cek apakah sudah ada produk dengan kategori + nama
+    $prefix = $categoryCode . '-' . $nameCode;
+
+    $existing = $this->product
+        ->like('sku', $prefix, 'after')
+        ->orderBy('sku', 'ASC')
+        ->first();
+
+    if ($existing) {
+        // ambil nomor urut yg sama
+        $parts = explode('-', $existing['sku']);
+        $number = isset($parts[2]) ? $parts[2] : '001';
+    } else {
+        // cari nomor urut terakhir
+        $lastProduct = $this->product
+            ->like('sku', $prefix, 'after')
+            ->orderBy('sku', 'DESC')
+            ->first();
+
+        if ($lastProduct) {
+            $parts = explode('-', $lastProduct['sku']);
+            $lastNumber = isset($parts[2]) ? (int)$parts[2] : 0;
+            $number = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        } else {
+            $number = '001';
+        }
+    }
+
+    return $categoryCode . '-' . $nameCode . '-' . $number . '-' . $brandCode;
+}
 
 
 

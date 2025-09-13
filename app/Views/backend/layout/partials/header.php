@@ -19,68 +19,41 @@
       <ul class="navbar-nav align-items-center">
 
         <li class="nav-item">
-          <a class="nav-link mobile-search-button" href="javascript:;">
-            <ion-icon name="search-outline"></ion-icon>
-          </a>
-        </li>
-
-        <li class="nav-item">
           <a class="nav-link dark-mode-icon" href="javascript:;">
             <ion-icon name="moon-outline"></ion-icon>
           </a>
-        </li>
-
-        <!-- Apps dropdown -->
-        <li class="nav-item dropdown dropdown-large dropdown-apps">
-          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
-            <ion-icon name="apps-outline"></ion-icon>
-          </a>
-          <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-            <div class="row row-cols-3 g-3 p-3">
-              <div class="col text-center">
-                <div class="app-box mx-auto bg-gradient-purple text-white">
-                  <ion-icon name="cart-outline"></ion-icon>
-                </div>
-                <div class="app-title">Orders</div>
-              </div>
-              <div class="col text-center">
-                <div class="app-box mx-auto bg-gradient-info text-white">
-                  <ion-icon name="people-outline"></ion-icon>
-                </div>
-                <div class="app-title">Teams</div>
-              </div>
-              <div class="col text-center">
-                <div class="app-box mx-auto bg-gradient-success text-white">
-                  <ion-icon name="shield-checkmark-outline"></ion-icon>
-                </div>
-                <div class="app-title">Tasks</div>
-              </div>
-            </div>
-          </div>
         </li>
 
         <!-- Notifications -->
         <li class="nav-item dropdown dropdown-large">
           <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
             <div class="position-relative">
-              <span class="notify-badge">8</span>
+              <span class="notify-badge"><?= count($lowStocks ?? []) ?></span>
               <ion-icon name="notifications-outline"></ion-icon>
             </div>
           </a>
           <div class="dropdown-menu dropdown-menu-end">
             <a href="#"><div class="msg-header"><p class="msg-header-title">Notifications</p></div></a>
             <div class="header-notifications-list">
-              <a class="dropdown-item" href="#">
-                <div class="d-flex align-items-center">
-                  <div class="notify text-primary">
-                    <ion-icon name="cart-outline"></ion-icon>
-                  </div>
-                  <div class="flex-grow-1">
-                    <h6 class="msg-name">New Orders</h6>
-                    <p class="msg-info">You have new orders</p>
-                  </div>
+              <?php if (!empty($lowStocks ?? [])): ?>
+                <?php foreach ($lowStocks as $p): ?>
+                  <a class="dropdown-item" href="#">
+                    <div class="d-flex align-items-center">
+                      <div class="notify text-warning">
+                        <ion-icon name="alert-circle-outline"></ion-icon>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="msg-name"><?= esc($p['name']) ?></h6>
+                        <p class="msg-info">Stok tersisa: <?= esc($p['stock']) ?></p>
+                      </div>
+                    </div>
+                  </a>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <div class="dropdown-item text-center text-muted">
+                  <small>Tidak ada produk yang hampir habis</small>
                 </div>
-              </a>
+              <?php endif; ?>
             </div>
           </div>
         </li>
@@ -113,7 +86,46 @@
 
       </ul>
     </div>
-
   </nav>
 </header>
 <!--end top header-->
+
+<style>
+/* Dropdown hover agar tetap jelas meski sidebar minimize */
+.top-header .dropdown-menu {
+  background-color: #1e1e2d; /* warna gelap modern */
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 1050; /* pastikan di atas sidebar */
+  min-width: 220px; /* biar ga ketimpa icon */
+}
+
+/* Efek hover item di dropdown */
+.top-header .dropdown-menu .dropdown-item {
+  color: #ddd; 
+  padding: 10px 15px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.top-header .dropdown-menu .dropdown-item:hover {
+  background-color: rgba(13, 110, 253, 0.2); /* biru transparan */
+  color: #fff;
+}
+
+/* Notifikasi item (lebih interaktif) */
+.header-notifications-list .dropdown-item:hover .notify {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}
+
+/* Hover pada icon navbar */
+.top-header .nav-link:hover ion-icon {
+  color: #0d6efd;
+}
+
+/* User dropdown hover */
+.top-header .dropdown-user-setting .dropdown-menu .dropdown-item:hover {
+  background-color: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+</style>

@@ -35,11 +35,12 @@ class Dashboard extends BaseController
         // Produk aktif
         $activeProducts = $productModel->where('is_active', 1)->countAllResults();
 
-        // Produk hampir habis
+        // Produk hampir habis (stok kurang dari atau sama dengan 5)
         $lowStocks = $productModel
             ->where('is_active', 1)
-            ->where('stock < min_stock')
+            ->where('stock <=', 5)
             ->findAll();
+
 
         // 🔹 Total Pengeluaran Bulan Ini (transaksi keluar)
         $expensesAmount = $stockInModel

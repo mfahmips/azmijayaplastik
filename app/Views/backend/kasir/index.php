@@ -36,7 +36,7 @@
                   <option value="<?= $p['id'] ?>"
                           data-sku="<?= $p['sku'] ?>"
                           data-name="<?= esc($p['name']) ?>"
-                          data-price="<?= $p['sell_price'] ?>">
+                          data-price="<?= (int)$p['sell_price'] ?>">
                     <?= esc($p['name']) ?> (Stok: <?= $p['stock'] ?>)
                   </option>
                 <?php else: ?>
@@ -46,7 +46,6 @@
             </select>
           </div>
 
-          <!-- hidden id + sku -->
           <input type="hidden" id="produkId">
           <input type="hidden" id="produkSku">
 
@@ -108,7 +107,7 @@
           <div class="mt-3">
             <label>Pembayaran</label>
             <input type="number" id="pembayaran" class="form-control mb-2">
-            <p>Kembalian: Rp <span id="kembalian">0</span></p>
+            <p>Kembalian: <span id="kembalian">Rp 0</span></p>
             <button class="btn btn-success w-100" id="btnSimpan">Simpan Transaksi</button>
           </div>
         </div>
@@ -117,14 +116,35 @@
   </div>
 </div>
 
+<!-- Modal Preview (struk) -->
+<div class="modal fade" id="modalPreview" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable" style="max-width:65mm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title">Preview Struk</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-2" style="max-height:80vh; overflow-y:auto;">
+        <div id="previewContent" class="p-1"></div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnSimpanTransaksi">Konfirmasi & Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- jQuery -->
 <script src="<?= base_url('assets/backend/js/jquery.min.js') ?>"></script>
+<!-- Bootstrap bundle -->
+<script src="<?= base_url('assets/backend/js/bootstrap.bundle.min.js') ?>"></script>
 
 <script>
 let belanja = [];
 
 function rupiah(n){ return (Number(n)||0).toLocaleString('id-ID'); }
-function toNumber(v){ return Number((v||'0').toString().replace(/\./g,''))||0; }
+function toNumber(v){ return parseInt((v||'0').toString().replace(/[^0-9]/g,'')) || 0; }
 
 function renderTabel(){
   let tbody = $('#tabelBelanja tbody').empty();
@@ -146,11 +166,7 @@ function renderTabel(){
   hitungGrandTotal();
 }
 
-function hapusItem(i){
-  belanja.splice(i,1);
-  renderTabel();
-}
-
+function hapusItem(i){ belanja.splice(i,1); renderTabel(); }
 function hitungGrandTotal(){
   const sub = toNumber($('#subTotal').val());
   const diskon = toNumber($('#diskon').val());
@@ -158,111 +174,55 @@ function hitungGrandTotal(){
   $('#grandTotal').val(grand);
   hitungKembalian();
 }
-
 function hitungKembalian(){
   const grand = toNumber($('#grandTotal').val());
   const bayar = toNumber($('#pembayaran').val());
-  $('#kembalian').text(rupiah(bayar-grand));
+  $('#kembalian').text('Rp ' + rupiah(bayar-grand));
+}
+
+function buatStrukHTML(data) {
+  let html = `
+    <div style="font-size:12px; text-align:center;">
+      <strong>Azmi Jaya Plastik</strong><br>
+      Jl. Contoh Alamat No.123<br>
+      Telp: 0812-3456-7890
+      <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+      <p style="text-align:left;">
+        No: ${data.invoice_hint||'-'}<br>
+        Tgl: ${new Date().toLocaleString()}<br>
+        Pelanggan: ${data.customer_name||'Umum'}
+      </p>
+      <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+      <table style="width:100%; font-size:12px;">`;
+  data.items.forEach((it,i)=>{
+    html += `
+      <tr>
+        <td style="text-align:left;">${i+1}. ${it.name}</td>
+        <td style="text-align:right;">Rp ${rupiah(it.subtotal)}</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">${it.qty} x Rp ${rupiah(it.price)}</td>
+        <td></td>
+      </tr>`;
+  });
+  html += `</table>
+      <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+      <p style="text-align:left;">
+        Total: Rp ${rupiah(data.total_price)}<br>
+        Bayar: Rp ${rupiah(data.payment)}<br>
+        Kembali: Rp ${rupiah(data.payment - data.total_price)}
+      </p>
+      <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+      <p>Terima kasih<br>Telah berbelanja</p>
+    </div>`;
+  return html;
 }
 
 $(document).ready(function(){
-
-  // pilih produk → isi form
-  $('#produkSelect').on('change', function(){
-    let opt = $(this).find(':selected');
-    if(!opt.val()) return;
-    $('#produkId').val(opt.val());
-    $('#produkSku').val(opt.data('sku'));
-    $('#produkNama').val(opt.data('name'));
-    $('#produkHarga').val(opt.data('price'));
-    $('#produkJumlah').val(1);
-    $('#produkTotal').val(opt.data('price'));
-  });
-
-  // jumlah diubah → total update
-  $('#produkJumlah').on('input', function(){
-    let harga = toNumber($('#produkHarga').val());
-    let qty = toNumber($(this).val());
-    $('#produkTotal').val(harga*qty);
-  });
-
-  // tombol tambahkan
-  $('#btnTambah').on('click', function(){
-  const id = $('#produkId').val();
-  const sku = $('#produkSku').val();
-  const name = $('#produkNama').val();
-  const price = toNumber($('#produkHarga').val());
-  const qty = Math.max(1, toNumber($('#produkJumlah').val()));
-
-  // langsung skip tanpa alert kalau belum ada produk
-  if (!id || !name || price <= 0) return;
-
-  const subtotal = qty * price;
-
-  belanja.push({ id, kode: sku||'-', name, price, qty, subtotal });
-
-  // reset form setelah masuk
-  $('#produkId,#produkSku,#produkNama,#produkHarga,#produkJumlah,#produkTotal').val('');
-  $('#produkSelect').val('').trigger('change');
-
-  renderTabel();
-});
-
-
-  // kalkulasi realtime
-  $('#diskon').on('input',hitungGrandTotal);
-  $('#pembayaran').on('input',hitungKembalian);
-
-  // simpan transaksi
-  $('#btnSimpan').on('click', function(){
-    if(!belanja.length) return alert('Belanja kosong!');
-    const total = toNumber($('#grandTotal').val());
-    const bayar = toNumber($('#pembayaran').val());
-    if(bayar < total) return alert('Pembayaran kurang');
-
-    fetch('<?= base_url('dashboard/kasir/simpanTransaksi') ?>',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        items: belanja,
-        total_price: total,
-        payment: bayar,
-        customer_name: $('#namaPelanggan').val().trim()||null,
-        invoice_hint: $('#noInvoice').val()||null
-      })
-    })
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.status==='ok'){
-        alert('Transaksi berhasil! Invoice: '+res.invoice);
-        window.open('<?= base_url('dashboard/kasir/cetak') ?>/'+res.invoice,'_blank');
-        location.reload();
-      } else {
-        alert('Gagal: '+res.message);
-      }
-    });
-  });
-});
-
-$(document).ready(function(){
-
-  // Panggil nomor invoice dari backend
   fetch('<?= base_url('dashboard/kasir/nextInvoice') ?>')
     .then(r => r.json())
-    .then(res => {
-      if(res.status === 'ok'){
-        $('#noInvoice').val(res.invoice);
-      } else {
-        // fallback kalau gagal
-        let today = new Date();
-        let dd = String(today.getDate()).padStart(2,'0');
-        let mm = String(today.getMonth()+1).padStart(2,'0');
-        let yyyy = today.getFullYear();
-        $('#noInvoice').val('INV-'+dd+mm+yyyy+'-0001');
-      }
-    });
+    .then(res => { if(res.status==='ok'){ $('#noInvoice').val(res.invoice); } });
 
-  // === existing code ===
   $('#produkSelect').on('change', function(){
     let opt = $(this).find(':selected');
     if(!opt.val()) return;
@@ -285,21 +245,15 @@ $(document).ready(function(){
     let sku = $('#produkSku').val();
     let name = $('#produkNama').val();
     let price = toNumber($('#produkHarga').val());
-    let qty = toNumber($('#produkJumlah').val());
+    let qty = Math.max(1, toNumber($('#produkJumlah').val()));
+    if (!id || !name || price <= 0) return;
 
-    // langsung skip tanpa alert kalau belum ada produk
-  if (!id || !name || price <= 0) return;
-
-    let subtotal = price*qty;
-    belanja.push({id, sku, name, price, qty, subtotal});
+    belanja.push({id, sku, name, price, qty, subtotal: price*qty});
     renderTabel();
 
     $('#produkId,#produkSku,#produkNama,#produkHarga,#produkJumlah,#produkTotal').val('');
     $('#produkSelect').val('').trigger('change');
   });
-
-  $('#diskon').on('input',hitungGrandTotal);
-  $('#pembayaran').on('input',hitungKembalian);
 
   $('#btnSimpan').on('click', function(){
     if(!belanja.length) return alert('Belanja kosong!');
@@ -307,31 +261,40 @@ $(document).ready(function(){
     const bayar = toNumber($('#pembayaran').val());
     if(bayar < total) return alert('Pembayaran kurang');
 
-    fetch('<?= base_url('dashboard/kasir/simpanTransaksi') ?>',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        items: belanja,
-        total_price: total,
-        payment: bayar,
-        customer_name: $('#namaPelanggan').val().trim()||null,
-        invoice_hint: $('#noInvoice').val()||null
+    const data = {
+      items: belanja,
+      total_price: total,
+      payment: bayar,
+      customer_name: $('#namaPelanggan').val().trim()||null,
+      invoice_hint: $('#noInvoice').val()||null
+    };
+
+    $('#previewContent').html(buatStrukHTML(data));
+    let modal = new bootstrap.Modal(document.getElementById('modalPreview'));
+    modal.show();
+
+    $('#btnSimpanTransaksi').off('click').on('click',function(){
+      fetch('<?= base_url('dashboard/kasir/simpanTransaksi') ?>',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
       })
-    })
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.status==='ok'){
-        alert('Transaksi berhasil! Invoice: '+res.invoice);
-        window.open('<?= base_url('dashboard/kasir/cetak') ?>/'+res.invoice,'_blank');
-        location.reload();
-      } else {
-        alert('Gagal: '+res.message);
-      }
+      .then(r=>r.json())
+      .then(res=>{
+        if(res.status==='ok'){
+          modal.hide();
+          alert('Transaksi berhasil! Invoice: '+res.invoice);
+          location.reload();
+        }else{
+          alert('Gagal: '+res.message);
+        }
+      });
     });
   });
 
+  $('#diskon').on('input',hitungGrandTotal);
+  $('#pembayaran').on('input',hitungKembalian);
 });
-
 </script>
 
 <?= $this->endSection() ?>

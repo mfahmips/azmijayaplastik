@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\ProductModel;
 use App\Models\SaleModel;
 use App\Models\SaleItemModel;
+use App\Models\StoreSettingModel;
 
 class Kasir extends BaseController
 {
@@ -15,32 +16,31 @@ class Kasir extends BaseController
 
     public function __construct()
     {
-        $this->productModel = new ProductModel();
-        $this->saleModel    = new SaleModel();
-        $this->saleItemModel = new SaleItemModel();
+        $this->productModel   = new ProductModel();
+        $this->saleModel      = new SaleModel();
+        $this->saleItemModel  = new SaleItemModel();
     }
 
     public function index()
-{
-    $produk = $this->productModel->where('is_active',1)->findAll();
-    return view('backend/kasir/index', compact('produk'));
-}
-
+    {
+        $produk = $this->productModel->where('is_active', 1)->findAll();
+        return view('backend/kasir/index', compact('produk'));
+    }
 
     /**
-     * Endpoint untuk generate invoice baru (INV-ddmmyyyy-0001)
+     * Generate invoice baru (INV-ddmmyyyy-0001)
      */
     public function nextInvoice()
     {
-        $today = date('Y-m-d');
-        $tanggal = date('dmY'); // contoh: 06092025
+        $today   = date('Y-m-d');
+        $tanggal = date('dmY');
 
-        $db = \Config\Database::connect();
+        $db    = \Config\Database::connect();
         $count = $db->table('sales')
             ->where('DATE(created_at)', $today)
             ->countAllResults();
 
-        $urut = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        $urut    = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
         $invoice = "INV-{$tanggal}-{$urut}";
 
         return $this->response->setJSON([
@@ -50,41 +50,43 @@ class Kasir extends BaseController
     }
 
     /**
-     * Cari produk untuk autocomplete (nama, sku, atau barcode)
+     * Cari produk (nama, sku, barcode)
      */
-public function cariProduk()
-{
-    $keyword = $this->request->getGet('q');
+    public function cariProduk()
+    {
+        $keyword = $this->request->getGet('q');
 
-    if (!$keyword) {
-        return $this->response->setJSON([]);
+        if (!$keyword) {
+            return $this->response->setJSON([]);
+        }
+
+        $produk = $this->productModel
+            ->select('id, sku, name, sell_price, stock')
+            ->where('is_active', 1)
+            ->groupStart()
+                ->like('name', $keyword)
+                ->orLike('sku', $keyword)
+                ->orLike('barcode', $keyword)
+            ->groupEnd()
+            ->limit(10)
+            ->findAll();
+
+        return $this->response->setJSON($produk);
     }
-
-    $produk = $this->productModel
-        ->select('id, sku, name, sell_price, stock') // ambil field penting
-        ->where('is_active', 1)
-        ->groupStart()
-            ->like('name', $keyword)
-            ->orLike('sku', $keyword)
-            ->orLike('barcode', $keyword)
-        ->groupEnd()
-        ->limit(10)
-        ->findAll(); // ⚠️ pakai findAll() bukan find()
-
-    return $this->response->setJSON($produk);
-}
-
 
     /**
      * Tambah produk baru via modal
      */
     public function tambahProdukBaru()
     {
-        $name = $this->request->getPost('name');
+        $name      = $this->request->getPost('name');
         $sellPrice = (int) ($this->request->getPost('sell_price') ?? 0);
 
         if (empty($name)) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Nama produk wajib diisi.']);
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Nama produk wajib diisi.'
+            ]);
         }
 
         $data = [
@@ -97,14 +99,14 @@ public function cariProduk()
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
-        $id = $this->productModel->insert($data);
+        $id     = $this->productModel->insert($data);
         $produk = $this->productModel->find($id);
 
         return $this->response->setJSON(['status' => 'ok', 'produk' => $produk]);
     }
 
     /**
-     * Simpan transaksi kasir
+     * Simpan transaksi kasir ke DB
      */
     public function simpanTransaksi()
     {
@@ -117,26 +119,26 @@ public function cariProduk()
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // Gunakan invoice dari client jika ada, jika tidak generate baru
+        // invoice
         $invoice = $data['invoice_hint'] ?? null;
         if (!$invoice) {
-            $today = date('Y-m-d');
+            $today   = date('Y-m-d');
             $tanggal = date('dmY');
-            $count = $db->table('sales')
+            $count   = $db->table('sales')
                 ->where('DATE(created_at)', $today)
                 ->countAllResults();
-            $urut = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $urut    = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
             $invoice = "INV-{$tanggal}-{$urut}";
         }
 
         $saleData = [
-            'invoice'      => $invoice,
-            'total_price'  => $data['total_price'],
-            'total_items'  => count($data['items']),
-            'customer_id'  => null,
-            'paid'         => $data['payment'],
-            'change'       => $data['payment'] - $data['total_price'],
-            'created_at'   => date('Y-m-d H:i:s'),
+            'invoice'     => $invoice,
+            'total_price' => $data['total_price'],
+            'total_items' => count($data['items']),
+            'customer_id' => null,
+            'paid'        => $data['payment'],
+            'change'      => $data['payment'] - $data['total_price'],
+            'created_at'  => date('Y-m-d H:i:s'),
         ];
 
         if (!empty($data['customer_name'])) {
@@ -157,7 +159,7 @@ public function cariProduk()
 
             $this->saleItemModel->insert($insertItem);
 
-            // Update stok produk
+            // update stok
             $produk = $this->productModel->find($item['id']);
             if ($produk) {
                 $newStock = (int)$produk['stock'] - (int)$item['qty'];
@@ -168,7 +170,10 @@ public function cariProduk()
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan transaksi.']);
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal menyimpan transaksi.'
+            ]);
         }
 
         return $this->response->setJSON(['status' => 'ok', 'invoice' => $invoice]);
@@ -183,26 +188,50 @@ public function cariProduk()
     }
 
     /**
-     * Cetak struk penjualan
+     * Cetak struk penjualan (opsional untuk riwayat)
      */
     public function cetak($invoice)
-{
-    $sale = $this->saleModel->getSaleByInvoice($invoice);
-    if (!$sale) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException("Invoice {$invoice} tidak ditemukan");
+    {
+        $sale = $this->saleModel->getSaleByInvoice($invoice);
+        if (!$sale) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Invoice {$invoice} tidak ditemukan");
+        }
+
+        return view('backend/kasir/print', [
+            'sale'  => $sale,
+            'items' => $sale['items']
+        ]);
     }
 
-    return view('backend/kasir/print', [
-        'sale' => $sale,
-        'items' => $sale['items']
-    ]);
-}
+    public function penjualanData()
+    {
+        $sales = $this->saleModel->getAllSalesWithSummary(100);
+        return $this->response->setJSON($sales);
+    }
 
-public function penjualanData()
-{
-    $sales = $this->saleModel->getAllSalesWithSummary(100); // ambil max 100 transaksi terakhir
-    return $this->response->setJSON($sales);
-}
+    /**
+     * Preview invoice sebelum simpan
+     */
+    public function previewInvoice()
+    {
+        $data = $this->request->getJSON(true);
 
+        $sale = [
+            'invoice'       => $data['invoice_hint'] ?? 'INV-'.date('dmY').'-TEMP',
+            'created_at'    => date('Y-m-d H:i:s'),
+            'customer_name' => $data['customer_name'] ?? 'Umum',
+            'total_items'   => count($data['items']),
+            'total_price'   => $data['total_price'],
+            'paid'          => $data['payment'],
+            'change'        => $data['payment'] - $data['total_price'],
+        ];
 
+        $items = $data['items'];
+
+        // ambil data toko
+        $storeModel = new StoreSettingModel();
+        $store      = $storeModel->first();
+
+        return view('backend/kasir/_invoice', compact('sale','items','store'));
+    }
 }

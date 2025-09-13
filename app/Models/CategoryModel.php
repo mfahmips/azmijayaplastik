@@ -11,14 +11,17 @@ class CategoryModel extends Model
     protected $useAutoIncrement = true;
 
     protected $returnType       = 'array';
-    protected $useSoftDeletes   = true;
 
     protected $allowedFields = [
-        'code', 'name', 'description', 'is_active'
+        'code',
+        'name',
+        'type',        // enum: category / sub / product
+        'is_active',
+        'created_at',
+        'updated_at'
     ];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-    protected $deletedField  = 'deleted_at';
 }
