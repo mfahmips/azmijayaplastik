@@ -88,20 +88,22 @@ class Products extends BaseController
         ]);
     }
 
-    public function store()
+   public function store()
 {
     $data = $this->request->getPost([
-        'name','brand','barcode','cost_price',
-        'sell_price','stock','min_stock','unit',
-        'category_id','supplier_id','is_active'
+    'name','brand','barcode','cost_price',
+    'sell_price','stock','min_stock','unit',
+    'category_id','supplier_id','is_active'
     ]);
 
-    $data['sku'] = $this->generateSkuByCategory($data['category_id'], $data['name'], $data['brand']);
+    // Auto-generate SKU
+    $data['sku'] = $this->generateSkuByCategory($data['category_id'], $data['brand']);
 
     $this->product->insert($data);
     $productId = $this->product->getInsertID();
 
-    // harga grosir
+
+    // harga grosir opsional
     $prices = $this->request->getPost('prices');
     if ($prices) {
         foreach ($prices as $price) {
@@ -114,8 +116,10 @@ class Products extends BaseController
         }
     }
 
-    return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil ditambahkan.');
+    return redirect()->to(base_url('dashboard/products'))
+                     ->with('success', 'Produk berhasil ditambahkan.');
 }
+
 
 
     public function edit($id)
@@ -127,22 +131,6 @@ class Products extends BaseController
             'suppliers'  => $this->supplier->findAll()
         ]);
     }
-
-    public function update($id)
-{
-    $data = $this->request->getPost([
-        'name','brand','barcode','cost_price',
-        'sell_price','stock','min_stock','unit',
-        'category_id','supplier_id','description','is_active'
-    ]);
-
-    // generate ulang SKU (supaya format konsisten)
-    $data['sku'] = $this->generateSkuByCategory($data['category_id'], $data['name'], $data['brand']);
-
-    $this->product->update($id, $data);
-
-    return redirect()->to(base_url('dashboard/products'))->with('success', 'Produk berhasil diupdate.');
-}
 
 
     public function delete($id)
@@ -166,8 +154,8 @@ class Products extends BaseController
     $sheet = $spreadsheet->getActiveSheet();
     $sheet->setTitle('Produk');
 
-    // ✅ Tambah kolom SKU
-    $sheet->fromArray([[ 
+    // ✅ Header
+    $sheet->fromArray([[
         'SKU','Nama','Merk','Kategori','Satuan',
         'Harga Beli','Harga Jual','Stok',
         'Unit Grosir','Minimal Qty','Harga Grosir'
@@ -208,7 +196,7 @@ class Products extends BaseController
 }
 
 
-    public function import()
+public function import()
 {
     $file = $this->request->getFile('file_excel');
     if ($file && $file->isValid()) {
@@ -216,28 +204,43 @@ class Products extends BaseController
 
         for ($i = 1; $i < count($sheet); $i++) {
             $row = $sheet[$i];
-            $sku        = trim($row[0] ?? ''); // ✅ SKU kolom pertama
-            $name       = trim($row[1] ?? '');
-            $brand      = trim($row[2] ?? '');
-            $category   = trim($row[3] ?? '');
-            $unit       = trim($row[4] ?? '');
-            $costPrice  = (float)($row[5] ?? 0);
-            $sellPrice  = (float)($row[6] ?? 0);
-            $stock      = (int)($row[7] ?? 0);
-            $grosirUnit = trim($row[8] ?? '');
-            $minQty     = (int)($row[9] ?? 0);
-            $grosirPrice= (float)($row[10] ?? 0);
 
-            // cari kategori
+            $sku         = trim($row[0] ?? '');
+            $name        = trim($row[1] ?? '');
+            $brand       = trim($row[2] ?? '');
+            $category    = trim($row[3] ?? '');
+            $unit        = trim($row[4] ?? '');
+            $costPrice   = (float)($row[5] ?? 0);
+            $sellPrice   = (float)($row[6] ?? 0);
+            $stock       = (int)($row[7] ?? 0);
+            $grosirUnit  = trim($row[8] ?? '');
+            $minQty      = (int)($row[9] ?? 0);
+            $grosirPrice = (float)($row[10] ?? 0);
+
+            // cari ID kategori
             $categoryRow = $this->category->where('name', $category)->first();
             $categoryId  = $categoryRow['id'] ?? null;
+            $categoryCode = $categoryRow['code'] ?? 'CAT';
 
-            // generate SKU kalau kosong
+            // generate SKU jika kosong
             if (empty($sku)) {
-                $sku = $this->generateSkuByCategory($categoryId, $name, $brand);
+                // ambil urutan terakhir dari kategori
+                $lastProduct = $this->product
+                    ->where('category_id', $categoryId)
+                    ->like('sku', $categoryCode, 'after')
+                    ->orderBy('id', 'DESC')
+                    ->first();
+
+                $lastNumber = 0;
+                if ($lastProduct && preg_match('/(\d{3})/', $lastProduct['sku'], $matches)) {
+                    $lastNumber = (int)$matches[1];
+                }
+
+                $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                $sku = $categoryCode . $newNumber . '-' . strtoupper(str_replace(' ', '', $brand));
             }
 
-            // cek apakah sudah ada (name+brand+category)
+            // cek duplikat berdasarkan name+brand+category
             $exists = $this->product
                 ->where('name', $name)
                 ->where('brand', $brand)
@@ -245,7 +248,6 @@ class Products extends BaseController
                 ->first();
 
             if ($exists) {
-                // ✅ Update produk lama
                 $this->product->update($exists['id'], [
                     'sku'         => $sku,
                     'unit'        => $unit,
@@ -256,7 +258,6 @@ class Products extends BaseController
                 ]);
                 $productId = $exists['id'];
             } else {
-                // ✅ Tambah produk baru
                 $this->product->insert([
                     'sku'         => $sku,
                     'name'        => $name,
@@ -271,7 +272,7 @@ class Products extends BaseController
                 $productId = $this->product->getInsertID();
             }
 
-            // harga grosir
+            // Insert harga grosir jika ada
             if ($minQty > 0 && $grosirPrice > 0) {
                 model('ProductPriceModel')->insert([
                     'product_id' => $productId,
@@ -284,9 +285,9 @@ class Products extends BaseController
 
         return redirect()->to(base_url('dashboard/products'))->with('success', 'Import berhasil!');
     }
+
     return redirect()->back()->with('error', 'File tidak valid.');
 }
-
 
 
     // ================= Barang Masuk =================
@@ -544,48 +545,33 @@ class Products extends BaseController
     }
 
 // ================= Utils =================
-private function generateSkuByCategory($categoryId, $name, $brand)
+private function generateSkuByCategory($categoryId, $brand)
 {
-    // kategori 3 huruf
     $category = $this->category->find($categoryId);
-    $categoryCode = $category ? strtoupper(substr(preg_replace('/\s+/', '', $category['name']), 0, 3)) : 'CAT';
 
-    // nama produk max 4 huruf
-    $nameCode = strtoupper(substr(preg_replace('/\s+/', '', $name), 0, 4));
+    $categoryCode = $category && !empty($category['code'])
+        ? strtoupper($category['code'])
+        : 'CAT';
 
-    // brand max 3 huruf
-    $brandCode = $brand ? strtoupper(substr(preg_replace('/\s+/', '', $brand), 0, 3)) : 'XXX';
+    $brandCode = strtoupper(str_replace(' ', '', $brand)) ?: 'BRAND';
 
-    // cek apakah sudah ada produk dengan kategori + nama
-    $prefix = $categoryCode . '-' . $nameCode;
-
-    $existing = $this->product
-        ->like('sku', $prefix, 'after')
-        ->orderBy('sku', 'ASC')
+    // Ambil SKU terakhir (bukan berdasarkan ID produk, tapi SKU yang cocok dengan prefix)
+    $lastProduct = $this->product
+        ->where('category_id', $categoryId)
+        ->like('sku', $categoryCode, 'after')
+        ->orderBy('id', 'DESC')
         ->first();
 
-    if ($existing) {
-        // ambil nomor urut yg sama
-        $parts = explode('-', $existing['sku']);
-        $number = isset($parts[2]) ? $parts[2] : '001';
+    if ($lastProduct && preg_match('/(\d{3})/', $lastProduct['sku'], $matches)) {
+        $lastNumber = (int) $matches[1];
+        $nextNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
     } else {
-        // cari nomor urut terakhir
-        $lastProduct = $this->product
-            ->like('sku', $prefix, 'after')
-            ->orderBy('sku', 'DESC')
-            ->first();
-
-        if ($lastProduct) {
-            $parts = explode('-', $lastProduct['sku']);
-            $lastNumber = isset($parts[2]) ? (int)$parts[2] : 0;
-            $number = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $number = '001';
-        }
+        $nextNumber = '001';
     }
 
-    return $categoryCode . '-' . $nameCode . '-' . $number . '-' . $brandCode;
+    return $categoryCode . $nextNumber . '-' . $brandCode;
 }
+
 
 
 

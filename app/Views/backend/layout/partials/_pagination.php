@@ -1,8 +1,8 @@
 <?php if ($pager->getPageCount('default') > 1): ?>
-  <nav aria-label="Page navigation example">
+  <nav aria-label="Navigasi halaman">
     <ul class="pagination justify-content-center">
-      
-      <!-- Tombol Previous -->
+
+      <!-- Tombol Sebelumnya -->
       <?php if ($pager->hasPrevious('default')) : ?>
         <li class="page-item">
           <a class="page-link" href="<?= $pager->getPreviousPageURI('default') ?>" aria-label="Sebelumnya">
@@ -28,7 +28,7 @@
         <?php endif ?>
       <?php endforeach ?>
 
-      <!-- Tombol Next -->
+      <!-- Tombol Berikutnya -->
       <?php if ($pager->hasNext('default')) : ?>
         <li class="page-item">
           <a class="page-link" href="<?= $pager->getNextPageURI('default') ?>" aria-label="Berikutnya">
@@ -40,7 +40,7 @@
           <span class="page-link" aria-hidden="true">&raquo;</span>
         </li>
       <?php endif ?>
-      
+
     </ul>
   </nav>
 <?php endif ?>
