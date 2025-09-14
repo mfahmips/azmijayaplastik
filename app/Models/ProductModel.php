@@ -54,11 +54,28 @@ class ProductModel extends Model
         return $this->where('sku', $sku)->first();
     }
 
-    public function getPrices($productId)
-    {
-        return model('ProductPriceModel')
-            ->where('product_id', $productId)
-            ->orderBy('min_qty', 'ASC')
-            ->findAll();
+    public function getProductsWithWholesale($limit = 10, $offset = 0, $filters = [])
+{
+    $builder = $this->db->table('products p');
+    $builder->select('p.*, c.name as category_name');
+    $builder->join('categories c', 'c.id = p.category_id', 'left');
+
+    // join grosir (ambil semua harga)
+    $builder->select("(SELECT GROUP_CONCAT(CONCAT(unit, ' min ', min_qty, ': Rp ', FORMAT(price,0)) SEPARATOR '<br>') 
+                      FROM product_prices pp WHERE pp.product_id = p.id) as wholesale_prices");
+
+    if (!empty($filters['q'])) {
+        $builder->like('p.name', $filters['q']);
     }
+
+    if (!empty($filters['category_id'])) {
+        $builder->where('p.category_id', $filters['category_id']);
+    }
+
+    $builder->limit($limit, $offset);
+
+    return $builder->get()->getResultArray();
+}
+
+
 }

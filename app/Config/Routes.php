@@ -49,6 +49,7 @@ $routes->group('dashboard', static function($routes) {
     $routes->post('products/delete/(:num)', 'Backend\Products::delete/$1');
     $routes->get('products/export', 'Backend\Products::export');
     $routes->post('products/import', 'Backend\Products::import');
+    $routes->post('products/save-wholesale', 'Backend\Products::saveWholesale');
 
     // Barang Masuk
     $routes->get('products/stock-in', 'Backend\Products::stockIn');
@@ -68,6 +69,8 @@ $routes->group('dashboard', static function($routes) {
     $routes->get('products/edit-opname/(:num)', 'Backend\Products::editOpname/$1');
     $routes->post('products/update-opname/(:num)', 'Backend\Products::updateOpname/$1');
     $routes->get('products/delete-opname/(:num)', 'Backend\Products::deleteOpname/$1');
+
+
 
     // =============================
     // Kategori

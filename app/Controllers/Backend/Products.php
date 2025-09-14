@@ -8,13 +8,14 @@ use App\Models\CategoryModel;
 use App\Models\SupplierModel;
 use App\Models\StockInModel;
 use App\Models\StockOpnameModel;
+use App\Models\ProductPriceModel; // ✅ tambahkan model harga grosir
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Products extends BaseController
 {
-    protected $product, $category, $supplier, $stockIn, $opname;
+    protected $product, $category, $supplier, $stockIn, $opname, $price;
 
     public function __construct()
     {
@@ -24,60 +25,82 @@ class Products extends BaseController
         $this->supplier = new SupplierModel();
         $this->stockIn  = new StockInModel();
         $this->opname   = new StockOpnameModel();
+        $this->price    = new ProductPriceModel(); // ✅ inisialisasi model grosir
     }
 
     // ================= Produk =================
     public function index()
-    {
-        $q           = trim($this->request->getGet('q') ?? '');
-        $perPage     = 12;
-        $category_id = $this->request->getGet('category_id');
-        $builder     = $this->product->getJoined();
+{
+    $q           = trim($this->request->getGet('q') ?? '');
+    $perPage     = 12;
+    $category_id = $this->request->getGet('category_id');
+    $builder     = $this->product->getJoined();
 
-        // filter pencarian
-        if ($q !== '') {
-            $builder->groupStart()
-                ->like('products.name', $q)
-                ->orLike('products.sku', $q)
-                ->orLike('products.barcode', $q)
-                ->groupEnd();
-        }
-
-        // filter kategori
-        if ($category_id) {
-            $builder->where('products.category_id', $category_id);
-        }
-
-        // urutkan berdasar kategori code + sku
-        $products = $builder
-            ->orderBy('category_code', 'ASC')
-            ->orderBy('products.sku', 'ASC')
-            ->paginate($perPage, 'prod');
-
-        $pager = $this->product->pager;
-        $no    = 1 + ($pager->getCurrentPage('prod') - 1) * $perPage;
-
-        // kategori hanya yang punya produk
-        $categories = $this->category
-            ->select('c.id, c.name, c.code')
-            ->from('categories c')
-            ->join('products p', 'p.category_id = c.id', 'inner')
-            ->groupBy('c.id, c.name, c.code')
-            ->orderBy('c.name', 'ASC')
-            ->findAll();
-
-
-        return view('backend/master/products/index', [
-            'title'       => 'Data Produk',
-            'products'    => $products,
-            'categories'  => $categories,
-            'pager'       => $pager,
-            'q'           => $q,
-            'category_id' => $category_id,
-            'per_page'    => $perPage,
-            'no'          => $no
-        ]);
+    // filter pencarian
+    if ($q !== '') {
+        $builder->groupStart()
+            ->like('products.name', $q)
+            ->orLike('products.sku', $q)
+            ->orLike('products.barcode', $q)
+            ->groupEnd();
     }
+
+    // filter kategori
+    if ($category_id) {
+        $builder->where('products.category_id', $category_id);
+    }
+
+    // urutkan berdasar kategori code + sku
+    $products = $builder
+        ->orderBy('category_code', 'ASC')
+        ->orderBy('products.sku', 'ASC')
+        ->paginate($perPage, 'prod');
+
+    $pager = $this->product->pager;
+    $no    = 1 + ($pager->getCurrentPage('prod') - 1) * $perPage;
+
+    // kategori hanya yang punya produk
+    $categories = $this->category
+        ->select('c.id, c.name, c.code')
+        ->from('categories c')
+        ->join('products p', 'p.category_id = c.id', 'inner')
+        ->groupBy('c.id, c.name, c.code')
+        ->orderBy('c.name', 'ASC')
+        ->findAll();
+
+    // Ambil harga grosir untuk semua produk
+    $priceModel = $this->price;
+    $pricesMap = [];
+
+        foreach ($products as &$p) {
+        $hargaGrosir = $priceModel->where('product_id', $p['id'])->orderBy('min_qty', 'ASC')->first();
+
+        if ($hargaGrosir) {
+            $p['grosir_unit']    = $hargaGrosir['unit'];
+            $p['grosir_min_qty'] = $hargaGrosir['min_qty'];
+            $p['grosir_price']   = $hargaGrosir['price'];
+            $pricesMap[$p['id']] = "≥ {$hargaGrosir['min_qty']} : Rp. " . number_format($hargaGrosir['price'], 0, ',', '.');
+        } else {
+            $p['grosir_unit']    = '';
+            $p['grosir_min_qty'] = '';
+            $p['grosir_price']   = '';
+            $pricesMap[$p['id']] = '-';
+        }
+    }
+
+
+    return view('backend/master/products/index', [
+        'title'       => 'Data Produk',
+        'products'    => $products,
+        'categories'  => $categories,
+        'pager'       => $pager,
+        'q'           => $q,
+        'category_id' => $category_id,
+        'per_page'    => $perPage,
+        'no'          => $no,
+        'pricesMap'   => $pricesMap, // ✅ dikirim ke view
+    ]);
+}
 
 
     public function create()
@@ -123,14 +146,88 @@ class Products extends BaseController
 
 
     public function edit($id)
-    {
-        return view('backend/master/products/edit', [
-            'product'    => $this->product->find($id),
-            'prices'     => model('ProductPriceModel')->where('product_id', $id)->findAll(),
-            'categories' => $this->category->findAll(),
-            'suppliers'  => $this->supplier->findAll()
-        ]);
+{
+    $product = $this->product->find($id);
+    $prices  = $this->price->where('product_id', $id)->findAll();
+
+    return view('backend/products/edit', [
+        'product' => $product,
+        'prices'  => $prices,
+        'categories' => $this->category->findAll(),
+        'suppliers'  => $this->supplier->findAll(),
+    ]);
+}
+
+
+
+
+public function update($id)
+{
+    $productModel = new \App\Models\ProductModel();
+
+    // validasi input
+    $validation = \Config\Services::validation();
+    $validation->setRules([
+        'name'        => 'required|string',
+        'brand'       => 'permit_empty|string',
+        'category_id' => 'required|integer',
+        'supplier_id' => 'permit_empty|integer',
+        'barcode'     => 'permit_empty|string',
+        'unit'        => 'permit_empty|string',
+        'cost_price'  => 'required|decimal',
+        'sell_price'  => 'required|decimal',
+        'stock'       => 'required|integer',
+        'min_stock'   => 'permit_empty|integer',
+        'is_active'   => 'required|in_list[0,1]',
+        'description' => 'permit_empty|string',
+    ]);
+
+    if (!$validation->withRequest($this->request)->run()) {
+        return redirect()->back()->with('error', $validation->listErrors());
     }
+
+    // ambil data produk lama (untuk SKU)
+    $product = $productModel->find($id);
+    if (!$product) {
+        return redirect()->back()->with('error', 'Produk tidak ditemukan');
+    }
+
+    // ambil input
+    $name        = $this->request->getPost('name');
+    $brand       = $this->request->getPost('brand');
+    $category_id = $this->request->getPost('category_id');
+
+    // supplier_id → null jika kosong
+    $supplier_id = $this->request->getPost('supplier_id');
+    if (empty($supplier_id)) {
+        $supplier_id = null;
+    }
+
+    // siapkan data update (SKU tetap dari DB)
+    $data = [
+        'sku'         => $product['sku'],
+        'name'        => $name,
+        'brand'       => $brand,
+        'category_id' => $category_id,
+        'supplier_id' => $supplier_id,
+        'barcode'     => $this->request->getPost('barcode'),
+        'unit'        => $this->request->getPost('unit'),
+        'cost_price'  => $this->request->getPost('cost_price'),
+        'sell_price'  => $this->request->getPost('sell_price'),
+        'stock'       => $this->request->getPost('stock'),
+        'min_stock'   => $this->request->getPost('min_stock'),
+        'is_active'   => $this->request->getPost('is_active'),
+        'description' => $this->request->getPost('description'),
+        'updated_at'  => date('Y-m-d H:i:s'),
+    ];
+
+    // update produk
+    $productModel->update($id, $data);
+
+    return redirect()->to('/dashboard/products')->with('success', 'Produk berhasil diperbarui');
+}
+
+
 
 
     public function delete($id)
@@ -570,6 +667,41 @@ private function generateSkuByCategory($categoryId, $brand)
     }
 
     return $categoryCode . $nextNumber . '-' . $brandCode;
+}
+
+
+public function saveWholesale()
+{
+    $productId = $this->request->getPost('product_id');
+    $unit      = $this->request->getPost('unit');
+    $minQty    = $this->request->getPost('min_qty');
+    $price     = $this->request->getPost('price');
+
+    if (!$productId || !$price || !$minQty) {
+        return redirect()->back()->with('error', 'Data tidak lengkap.');
+    }
+
+    // Cek apakah sudah ada harga grosir untuk produk ini
+    $existing = $this->price->where('product_id', $productId)->first();
+
+    if ($existing) {
+        // Update
+        $this->price->update($existing['id'], [
+            'unit'    => $unit,
+            'min_qty'=> $minQty,
+            'price'   => $price,
+        ]);
+    } else {
+        // Tambah
+        $this->price->insert([
+            'product_id' => $productId,
+            'unit'       => $unit,
+            'min_qty'    => $minQty,
+            'price'      => $price,
+        ]);
+    }
+
+    return redirect()->to(base_url('dashboard/products'))->with('success', 'Harga grosir disimpan.');
 }
 
 

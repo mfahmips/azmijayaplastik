@@ -57,10 +57,9 @@
                   <tr class="text-center">
                     <th>SKU</th>
                     <th>Nama</th>
-                    <th>Merk</th>
-                    <th>Kategori</th>
                     <th>Satuan</th>
                     <th>Harga Jual</th>
+                    <th>Harga Grosir</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -69,11 +68,33 @@
                     <tr class="text-center">
                       <td><code><?= esc($r['sku']) ?></code></td>
                       <td><?= esc($r['name']) ?></td>
-                      <td><?= esc($r['brand'] ?? '-') ?></td>
-                      <td><?= esc($r['category_name'] ?? '-') ?></td>
                       <td><?= esc($r['unit']) ?></td>
-                      <td class="text-end">Rp <?= number_format($r['sell_price'], 0, ',', '.') ?></td>
-                      <td class="text-end">
+                      <td>Rp <?= number_format($r['sell_price'], 0, ',', '.') ?></td>
+                      <td>
+                        <?php if (!empty($pricesMap[$r['id']]) && $pricesMap[$r['id']] !== '-'): ?>
+                          <a href="#"
+                             class="text-decoration-none"
+                             data-bs-toggle="modal"
+                             data-bs-target="#wholesaleModal"
+                             data-product-id="<?= $r['id'] ?>"
+                             data-unit="<?= esc($r['grosir_unit'] ?? '') ?>"
+                             data-min_qty="<?= esc($r['grosir_min_qty'] ?? '') ?>"
+                             data-price="<?= esc($r['grosir_price'] ?? '') ?>">
+                            <?= $pricesMap[$r['id']] ?>
+                          </a>
+                        <?php else: ?>
+                          <button class="btn btn-sm btn-outline-success"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#wholesaleModal"
+                                  data-product-id="<?= $r['id'] ?>">
+                            + Tambah
+                          </button>
+                        <?php endif ?>
+                      </td>
+
+
+
+                      <td>
                         <button class="btn btn-sm btn-outline-primary"
                           data-bs-toggle="modal" data-bs-target="#productModal"
                           data-mode="edit"
@@ -140,9 +161,47 @@
   </div>
 </div>
 
+<!-- Modal: Harga Grosir -->
+<div class="modal fade" id="wholesaleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="<?= base_url('dashboard/products/save-wholesale') ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="product_id" id="wholesale-product-id">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Harga Grosir Produk</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Satuan</label>
+          <input type="text" name="unit" id="wholesale-unit" class="form-control" placeholder="pcs/pack/dus" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Minimal Qty</label>
+          <input type="number" name="min_qty" id="wholesale-min_qty" class="form-control" min="1" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Harga Grosir</label>
+          <input type="number" name="price" id="wholesale-price" class="form-control" min="0" step="0.01" required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 <!-- Modal: Tambah/Edit Produk -->
 <div class="modal fade" id="productModal" tabindex="-1">
-  <div class="modal-dialog modal-xl"> <!-- perbesar modal -->
+  <div class="modal-dialog modal-lg"> <!-- perbesar modal -->
     <form class="modal-content" method="post" id="productForm">
       <?= csrf_field() ?>
       <input type="hidden" name="id" id="product-id">
@@ -154,36 +213,39 @@
       <div class="modal-body">
         <div class="row g-3">
           <!-- SKU -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>SKU</label>
             <input type="text" name="sku" id="product-sku" class="form-control" readonly>
           </div>
 
           <!-- Nama -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Nama</label>
             <input type="text" name="name" id="product-name" class="form-control" required>
           </div>
 
           <!-- Merk -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Merk</label>
             <input type="text" name="brand" id="product-brand" class="form-control">
           </div>
 
           <!-- Kategori -->
-          <select name="category_id" id="product-category_id" class="form-select">
-            <option value="">— Pilih Kategori —</option>
-            <?php foreach ($categories ?? [] as $cat): ?>
-              <option value="<?= $cat['id'] ?>" data-code="<?= esc($cat['code']) ?>">
-                <?= esc($cat['name']) ?>
-              </option>
-            <?php endforeach ?>
-          </select>
+          <div class="col-md-4">
+            <label>Kategori</label>
+            <select name="category_id" id="product-category_id" class="form-select">
+              <option value="">— Pilih Kategori —</option>
+              <?php foreach ($categories ?? [] as $cat): ?>
+                <option value="<?= $cat['id'] ?>" data-code="<?= esc($cat['code']) ?>">
+                  <?= esc($cat['name']) ?>
+                </option>
+              <?php endforeach ?>
+            </select>
+          </div>
 
 
           <!-- Supplier -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Supplier</label>
             <select name="supplier_id" id="product-supplier_id" class="form-select">
               <option value="">— Pilih Supplier —</option>
@@ -194,39 +256,48 @@
           </div>
 
           <!-- Barcode -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Barcode</label>
             <input type="text" name="barcode" id="product-barcode" class="form-control">
           </div>
 
           <!-- Unit -->
-          <div class="col-md-6">
-            <label>Unit</label>
+          <div class="col-md-4">
+            <label>Satuan</label>
             <input type="text" name="unit" id="product-unit" class="form-control" required>
           </div>
 
           <!-- Harga Beli -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Harga Beli</label>
             <input type="number" name="cost_price" id="product-cost_price" class="form-control" step="0.01">
           </div>
 
           <!-- Harga Jual Utama -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Harga Jual (Default)</label>
             <input type="number" name="sell_price" id="product-sell_price" class="form-control" step="0.01">
           </div>
 
           <!-- Stok -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Stok</label>
             <input type="number" name="stock" id="product-stock" class="form-control">
           </div>
 
           <!-- Min Stok -->
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label>Minimal Stok</label>
             <input type="number" name="min_stock" id="product-min_stock" class="form-control">
+          </div>
+
+          <!-- Status -->
+          <div class="col-md-4">
+            <label>Status</label>
+            <select name="is_active" id="product-is_active" class="form-select">
+              <option value="1">Aktif</option>
+              <option value="0">Nonaktif</option>
+            </select>
           </div>
 
           <!-- Deskripsi -->
@@ -234,40 +305,7 @@
             <label>Deskripsi</label>
             <textarea name="description" id="product-description" class="form-control"></textarea>
           </div>
-
-          <!-- Status -->
-          <div class="col-md-6">
-            <label>Status</label>
-            <select name="is_active" id="product-is_active" class="form-select">
-              <option value="1">Aktif</option>
-              <option value="0">Nonaktif</option>
-            </select>
-          </div>
         </div>
-
-        <!-- Harga Grosir -->
-        <hr class="my-4">
-        <h5>Harga Grosir</h5>
-        <table class="table table-bordered" id="price-table">
-          <thead class="table-light">
-            <tr>
-              <th>Unit</th>
-              <th>Minimal Qty</th>
-              <th>Harga</th>
-              <th width="50">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><input type="text" name="prices[0][unit]" class="form-control" placeholder="pcs/pack/dus"></td>
-              <td><input type="number" name="prices[0][min_qty]" class="form-control" value="1"></td>
-              <td><input type="number" name="prices[0][price]" class="form-control" step="0.01"></td>
-              <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-price">&times;</button></td>
-            </tr>
-          </tbody>
-        </table>
-        <button type="button" class="btn btn-sm btn-outline-primary" id="add-price">+ Tambah Harga Grosir</button>
-
       </div>
 
       <div class="modal-footer">
@@ -302,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const productModal = document.getElementById('productModal');
   const productForm  = document.getElementById('productForm');
 
-  // Modal edit
+  // Modal edit Produk
   productModal.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
     const mode   = button.getAttribute('data-mode');
@@ -329,12 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('product-stock').value = button.getAttribute('data-stock');
       document.getElementById('product-description').value = button.getAttribute('data-description');
       document.getElementById('product-is_active').value = button.getAttribute('data-is_active');
-    // Modal tambah
-      } else {
-        modalTitle.textContent = 'Tambah Produk';
-        productForm.action = '<?= base_url('dashboard/products/store') ?>';
-      }
-
+    } else {
+      modalTitle.textContent = 'Tambah Produk';
+      productForm.action = '<?= base_url('dashboard/products/store') ?>';
+    }
   });
 
   // Modal hapus
@@ -346,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     deleteForm.action = '<?= base_url('dashboard/products/delete') ?>/' + id;
   });
 
-  // ✅ AJAX filter (submit form)
+  // AJAX filter form
   $(document).on('submit', '#filter-form', function(e) {
     e.preventDefault();
     $.get("<?= base_url('dashboard/products') ?>", $(this).serialize(), function(response) {
@@ -355,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ✅ AJAX pagination
+  // AJAX pagination
   $(document).on('click', '#product-wrapper .pagination a', function(e) {
     e.preventDefault();
     let url = $(this).attr('href');
@@ -366,61 +402,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ✅ Auto filter on category change
+  // Auto filter on category change
   $(document).on('change', '#filter-form select[name="category_id"]', function() {
     $('#filter-form').submit();
   });
 
-  // (Optional) auto filter saat ketik di input search
+  // Auto filter on enter key
   $(document).on('keyup', '#filter-form input[name="q"]', function(e) {
     if (e.keyCode === 13) {
       $('#filter-form').submit();
     }
   });
+
+  // Modal Harga Grosir
+const wholesaleModal = document.getElementById('wholesaleModal');
+wholesaleModal.addEventListener('show.bs.modal', function (event) {
+  const button = event.relatedTarget;
+
+  // Ambil data dari tombol
+  const productId = button.getAttribute('data-product-id');
+  const unit = button.getAttribute('data-unit') || '';
+  const minQty = button.getAttribute('data-min_qty') || '';
+  const price = button.getAttribute('data-price') || '';
+
+  // Isi nilai ke dalam input modal
+  document.getElementById('wholesale-product-id').value = productId;
+  document.getElementById('wholesale-unit').value = unit;
+  document.getElementById('wholesale-min_qty').value = minQty;
+  document.getElementById('wholesale-price').value = price;
 });
 
 
+
+// SKU generator (preview)
 function generateSku() {
   let category = document.getElementById('product-category_id');
   let categoryCode = category.options[category.selectedIndex]?.dataset.code || 'CAT';
-
-  // default preview nomor (backend yang akan kasih nomor real)
   let numberPreview = "0001";
-
   document.getElementById('product-sku').value = "AJP-" + categoryCode + "-" + numberPreview;
 }
 
-// trigger realtime
 document.getElementById('product-category_id').addEventListener('change', generateSku);
-
-// panggil sekali saat halaman load
 window.addEventListener('DOMContentLoaded', generateSku);
-
-
-
-// Harga grosir dinamis
-let priceIndex = 1;
-document.getElementById('add-price').addEventListener('click', function() {
-  let row = `
-    <tr>
-      <td><input type="text" name="prices[${priceIndex}][unit]" class="form-control" placeholder="pcs/pack/dus"></td>
-      <td><input type="number" name="prices[${priceIndex}][min_qty]" class="form-control" value="1"></td>
-      <td><input type="number" name="prices[${priceIndex}][price]" class="form-control" step="0.01"></td>
-      <td class="text-center"><button type="button" class="btn btn-sm btn-danger remove-price">&times;</button></td>
-    </tr>
-  `;
-  document.querySelector('#price-table tbody').insertAdjacentHTML('beforeend', row);
-  priceIndex++;
-});
-
-// Hapus baris harga grosir
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('remove-price')) {
-    e.target.closest('tr').remove();
-  }
-});
-
-
 </script>
+
 
 <?= $this->endSection() ?>
